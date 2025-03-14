@@ -1,0 +1,166 @@
+/* Accessibility Styles */
+/* Styles to enhance accessibility for keyboard navigation, screen readers, and visual accessibility */
+
+/* Focus Styles */
+/* Enhanced focus styles for keyboard navigation */
+:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  box-shadow: var(--shadow-focus);
+}
+
+/* Interactive elements should have a visible focus state */
+/* Ensures all interactive elements have clear focus indicators */
+button:focus-visible,
+[role='button']:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.dropdown-control:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  box-shadow: var(--shadow-focus);
+}
+
+/* Skip to content link - visually hidden until focused */
+/* Allows keyboard users to skip navigation */
+.skip-to-content {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--color-primary);
+  color: white;
+  padding: var(--spacing-sm) var(--spacing-md);
+  z-index: var(--z-index-tooltip);
+  transition: top var(--transition-base);
+}
+
+.skip-to-content:focus {
+  top: 0;
+}
+
+/* Screen reader only content */
+/* Visually hidden but accessible to screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Visually hidden but accessible to screen readers when focused */
+/* For elements that should be visible only when focused */
+.sr-only-focusable:not(:focus) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Reduced motion support */
+/* Respects user preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode support */
+/* Ensures visibility in Windows High Contrast Mode */
+@media (forced-colors: active) {
+  button, [role='button'] {
+    border: 1px solid ButtonText;
+  }
+  
+  :focus {
+    outline: 2px solid ButtonText;
+  }
+  
+  .form-field.has-error {
+    outline: 2px solid LinkText;
+  }
+}
+
+/* ARIA states */
+/* Styling based on ARIA attributes */
+[aria-invalid='true'] {
+  border-color: var(--color-error) !important;
+  box-shadow: var(--shadow-error) !important;
+}
+
+[aria-disabled='true'] {
+  opacity: 0.6;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+[aria-busy='true'] {
+  cursor: progress;
+}
+
+[aria-hidden='true'] {
+  display: none !important;
+}
+
+/* Keyboard focus trap for modals */
+/* Ensures focus stays within modal dialogs */
+.focus-trap {
+  outline: none;
+}
+
+/* Document viewer specific accessibility */
+/* Accessibility enhancements for the document viewer */
+.document-viewer-container:focus-within {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 4px;
+}
+
+.metadata-panel:focus-within {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+/* Keyboard navigation indicators */
+/* Visual indicators for keyboard navigation */
+.keyboard-user *:focus {
+  outline: 2px solid var(--color-primary) !important;
+  outline-offset: 2px !important;
+  box-shadow: var(--shadow-focus) !important;
+}
+
+/* Live region for screen reader announcements */
+/* For dynamic content updates */
+.live-region {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
