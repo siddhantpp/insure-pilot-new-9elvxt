@@ -1,0 +1,159 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3200
+  grpc_listen_port: 9096
+  http_server_read_timeout: "30s"
+  http_server_write_timeout: "30s"
+  grpc_server_max_recv_msg_size: 4194304
+  grpc_server_max_send_msg_size: 4194304
+
+distributor:
+  receivers:
+    jaeger:
+      protocols:
+        thrift_http:
+          endpoint: "0.0.0.0:14268"
+        grpc:
+          endpoint: "0.0.0.0:14250"
+    zipkin:
+      endpoint: "0.0.0.0:9411"
+    otlp:
+      protocols:
+        grpc:
+          endpoint: "0.0.0.0:4317"
+        http:
+          endpoint: "0.0.0.0:4318"
+
+ingester:
+  max_block_duration: "5m"
+  max_block_bytes: 268435456
+  trace_idle_period: "10s"
+  flush_check_period: "30s"
+  complete_block_timeout: "5m"
+
+compactor:
+  compaction:
+    block_retention: "7d"
+    compacted_block_retention: "1h"
+    compaction_window: "1h"
+    max_compaction_objects: 1000000
+    block_retention_overrides:
+      documents-view-critical: "30d"
+
+storage:
+  trace:
+    backend: "local"
+    block:
+      bloom_filter_false_positive: 0.05
+      index_downsample_bytes: 1000
+      encoding: "zstd"
+    wal:
+      path: "/data/tempo/wal"
+      encoding: "snappy"
+    local:
+      path: "/data/tempo/blocks"
+    pool:
+      max_workers: 100
+      queue_depth: 10000
+
+querier:
+  frontend_worker:
+    frontend_address: "127.0.0.1:9096"
+    grpc_client_config:
+      max_send_msg_size: 4194304
+  max_concurrent_queries: 20
+  query_timeout: "2m"
+  search:
+    max_duration: "24h"
+    max_bytes_per_tag_values_query: 5242880
+
+metrics_generator:
+  registry:
+    external_labels:
+      source: "tempo"
+      environment: "${ENVIRONMENT}"
+  storage:
+    path: "/data/tempo/generator/wal"
+    remote_write:
+      enabled: true
+      client:
+        url: "http://mimir:9009/api/v1/push"
+        headers:
+          X-Scope-OrgID: "documents-view"
+        timeout: "10s"
+        queue_config:
+          capacity: 10000
+          max_shards: 200
+          min_shards: 1
+          max_samples_per_send: 1000
+  processors:
+    - service_graphs:
+        dimensions: ["service", "span_kind"]
+    - span_metrics:
+        dimensions: ["service", "span_name", "span_kind", "status_code"]
+        histogram_buckets: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10]
+
+overrides:
+  metrics_generator_processors:
+    - service_graphs:
+        dimensions: ["service", "span_kind"]
+    - span_metrics:
+        dimensions: ["service", "span_name", "span_kind", "status_code"]
+        histogram_buckets: [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10]
+
+usage_report:
+  reporting_enabled: false
+
+search:
+  enabled: true
+  max_duration: "24h"
+  max_bytes_per_tag_values_query: 5242880
+
+instrumentation:
+  tracing:
+    enabled: true
+    endpoint: "localhost:4317"
+    insecure: true
+  metrics:
+    prometheus:
+      endpoint: "0.0.0.0:3201"
+
+trace_by_id:
+  cache_control_header: "max-age=60"
+
+service_traces:
+  - service_name: "document-viewer"
+    span_name: "document_load"
+    description: "Traces for document loading operations"
+    retention: "7d"
+  - service_name: "document-viewer"
+    span_name: "metadata_update"
+    description: "Traces for metadata update operations"
+    retention: "7d"
+  - service_name: "document-viewer"
+    span_name: "document_process"
+    description: "Traces for document processing operations"
+    retention: "7d"
+  - service_name: "document-api"
+    span_name: "api_request"
+    description: "Traces for API requests"
+    retention: "7d"
+  - service_name: "document-database"
+    span_name: "database_query"
+    description: "Traces for database operations"
+    retention: "7d"
+
+integration_points:
+  - component: "OpenTelemetry Collector"
+    purpose: "Collects traces from application components"
+    configuration: "Configured to receive traces via OTLP, Jaeger, and Zipkin protocols"
+  - component: "Grafana"
+    purpose: "Visualizes traces in dashboards"
+    configuration: "Uses Tempo as a data source for trace queries and visualizations"
+  - component: "Loki"
+    purpose: "Correlates logs with traces"
+    configuration: "Shares trace IDs with Tempo for unified observability"
+  - component: "Mimir"
+    purpose: "Stores metrics derived from traces"
+    configuration: "Receives metrics from Tempo's metrics generator"
