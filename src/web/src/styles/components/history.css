@@ -1,0 +1,256 @@
+@import "../abstracts/variables.css";
+@import "../abstracts/mixins.css";
+
+/* Main history panel container */
+.history-panel {
+  @include flex-column;
+  height: 100%;
+  background-color: var(--color-background);
+  overflow: hidden;
+  @include slide-in-right;
+}
+
+/* Header section of history panel */
+.history-panel-header {
+  @include flex-between;
+  padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+/* History panel title */
+.history-panel-title {
+  @include heading-3;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+/* Back button to return to metadata panel */
+.history-back-button {
+  @include button-reset;
+  display: flex;
+  align-items: center;
+  color: var(--color-primary);
+  font-size: var(--font-size-base);
+  transition: color var(--transition-base);
+}
+
+.history-back-button:hover,
+.history-back-button:focus {
+  color: var(--color-primary-dark);
+}
+
+.history-back-button:focus {
+  @include focus-visible;
+}
+
+/* Back button icon */
+.history-back-icon {
+  margin-right: var(--spacing-xs);
+  width: 16px;
+  height: 16px;
+}
+
+/* Last edited information section */
+.history-last-edited {
+  padding: 0 var(--spacing-lg) var(--spacing-md);
+  color: var(--color-text-secondary);
+  @include small-text;
+}
+
+/* Username of last editor */
+.history-last-edited-by {
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+/* Container for list of history items */
+.history-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+/* Individual history entry item */
+.history-item {
+  @include history-item;
+  display: flex;
+  align-items: flex-start;
+}
+
+/* Icon indicating type of action */
+.history-item-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin-right: var(--spacing-sm);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+}
+
+/* Specific icons for different action types */
+.view-icon {
+  background-image: url('../../assets/images/icons/eye.svg');
+}
+
+.edit-icon {
+  background-image: url('../../assets/images/icons/edit.svg');
+}
+
+.process-icon {
+  background-image: url('../../assets/images/icons/check.svg');
+}
+
+.unprocess-icon {
+  background-image: url('../../assets/images/icons/undo.svg');
+}
+
+.trash-icon {
+  background-image: url('../../assets/images/icons/trash.svg');
+}
+
+.restore-icon {
+  background-image: url('../../assets/images/icons/restore.svg');
+}
+
+.default-icon {
+  background-image: url('../../assets/images/icons/document.svg');
+}
+
+/* Content container for history item */
+.history-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Header section of history item */
+.history-item-header {
+  @include flex-between;
+  margin-bottom: var(--spacing-xs);
+}
+
+/* Timestamp of the history action */
+.history-item-timestamp {
+  @include small-text;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* Username who performed the action */
+.history-item-user {
+  @include small-text;
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  @include text-ellipsis;
+  max-width: 50%;
+}
+
+/* Description of the action performed */
+.history-item-description {
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Empty state when no history is available */
+.history-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+/* Icon for empty history state */
+.history-empty-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: var(--spacing-md);
+  opacity: 0.5;
+}
+
+/* Text for empty history state */
+.history-empty-text {
+  font-size: var(--font-size-base);
+  margin: 0;
+}
+
+/* Loading state for history panel */
+.history-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+/* Error state for history panel */
+.history-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--color-error);
+}
+
+/* Icon for error state */
+.history-error-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: var(--spacing-md);
+}
+
+/* Text for error state */
+.history-error-text {
+  font-size: var(--font-size-base);
+  margin: 0 0 var(--spacing-md);
+}
+
+/* Retry button for error state */
+.history-error-retry {
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  cursor: pointer;
+  font-size: var(--font-size-base);
+  border-radius: var(--border-radius-sm);
+  transition: background-color var(--transition-base);
+}
+
+.history-error-retry:hover,
+.history-error-retry:focus {
+  background-color: var(--color-primary-light);
+}
+
+.history-error-retry:focus {
+  @include focus-visible;
+}
+
+/* Responsive styles for mobile devices */
+@media (max-width: var(--breakpoint-mobile)) {
+  .history-panel-header {
+    padding: var(--spacing-md);
+  }
+  
+  .history-last-edited {
+    padding: 0 var(--spacing-md) var(--spacing-sm);
+  }
+  
+  .history-item {
+    padding: var(--spacing-sm);
+  }
+}
+
+/* Exit animation for history panel */
+.history-panel-exit {
+  @include slide-out-right;
+}
