@@ -1,0 +1,262 @@
+/* Panel Layout Styles */
+/* Styles for the panel-based layout used in the Documents View feature */
+
+@import '../abstracts/variables.css';
+
+/* Base panel styling */
+.panel {
+  background-color: var(--color-background);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.panel-header {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 60px;
+  background-color: var(--color-background);
+  z-index: 1;
+}
+
+.panel-title {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-lg);
+  margin: 0;
+  flex: 1;
+}
+
+.panel-content {
+  padding: var(--spacing-lg);
+  flex: 1 1 auto;
+  overflow-y: auto;
+}
+
+.panel-footer {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--color-background);
+}
+
+.panel-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+.panel-divider {
+  height: 1px;
+  background-color: var(--color-border);
+  margin: var(--spacing-md) 0;
+}
+
+.panel-section {
+  margin-bottom: var(--spacing-lg);
+}
+
+.panel-section-title {
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-base);
+  margin-bottom: var(--spacing-md);
+}
+
+/* Document View specific panels */
+.document-panel {
+  background-color: var(--pdf-background);
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.metadata-panel {
+  width: var(--right-panel-width);
+  border-left: 1px solid var(--color-border);
+  background-color: var(--metadata-background);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.history-panel {
+  width: var(--right-panel-width);
+  background-color: var(--color-background);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Utility classes for panel components */
+.panel-scroll {
+  overflow-y: auto;
+  flex: 1 1 auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Panel groups - multiple panels with shared borders */
+.panel-group {
+  display: flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+}
+
+.panel-group .panel {
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+}
+
+.panel-group .panel + .panel {
+  border-left: 1px solid var(--color-border);
+}
+
+/* Tab navigation within panels */
+.panel-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.panel-tab {
+  padding: var(--spacing-md);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: var(--transition-base);
+}
+
+.panel-tab.active {
+  border-bottom-color: var(--color-primary);
+  font-weight: var(--font-weight-medium);
+}
+
+.panel-tab-content {
+  display: none;
+  padding: var(--spacing-lg);
+}
+
+.panel-tab-content.active {
+  display: block;
+}
+
+/* Panel states */
+.panel-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.panel-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--spacing-lg);
+  color: var(--color-text-secondary);
+  min-height: 200px;
+}
+
+/* Sticky panel components */
+.panel-sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: var(--color-background);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.panel-sticky-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  background-color: var(--color-background);
+  border-top: 1px solid var(--color-border);
+}
+
+/* Modal panels (lightbox) */
+.panel-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--color-overlay);
+  z-index: var(--z-index-modal-backdrop);
+}
+
+.panel-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: var(--z-index-modal);
+  max-width: 90%;
+  max-height: 90%;
+  width: 600px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Panel controls */
+.panel-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--spacing-md);
+  color: var(--color-text-secondary);
+  transition: var(--transition-base);
+}
+
+.panel-close:hover {
+  color: var(--color-text-primary);
+}
+
+.panel-close:focus {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+/* Responsive behavior */
+@media (max-width: var(--breakpoint-tablet)) {
+  .panel-group {
+    flex-direction: column;
+  }
+  
+  .panel-group .panel + .panel {
+    border-left: none;
+    border-top: 1px solid var(--color-border);
+  }
+  
+  .metadata-panel {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--color-border);
+  }
+  
+  .history-panel {
+    width: 100%;
+  }
+}
+
+@media (max-width: var(--breakpoint-mobile)) {
+  .panel-header, 
+  .panel-content, 
+  .panel-footer {
+    padding: var(--spacing-md);
+  }
+  
+  .panel-tab {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+}
