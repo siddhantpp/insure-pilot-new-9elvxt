@@ -1,0 +1,163 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: documents-view
+  labels:
+    app: documents-view
+    component: web
+    part-of: insure-pilot
+    managed-by: kustomize
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: documents-view
+      component: web
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: documents-view
+        component: web
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - documents-view
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - name: frontend
+        image: $(REGISTRY)/documents-view-frontend:$(TAG)
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 80
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+        env:
+        - name: REACT_APP_API_URL
+          value: /api
+        - name: REACT_APP_ADOBE_SDK_URL
+          value: $(ADOBE_SDK_URL)
+      - name: backend
+        image: $(REGISTRY)/documents-view-backend:$(TAG)
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 8000
+          protocol: TCP
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 15
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/health/ready
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+        env:
+        - name: APP_ENV
+          value: production
+        - name: APP_DEBUG
+          value: "false"
+        - name: DB_HOST
+          value: $(DB_HOST)
+        - name: DB_PORT
+          value: $(DB_PORT)
+        - name: DB_DATABASE
+          value: $(DB_DATABASE)
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: documents-view-secrets
+              key: db_username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: documents-view-secrets
+              key: db_password
+        - name: REDIS_HOST
+          value: $(REDIS_HOST)
+        - name: REDIS_PORT
+          value: $(REDIS_PORT)
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: documents-view-secrets
+              key: redis_password
+              optional: true
+        - name: DOCUMENT_VIEWER_ENABLED
+          value: $(DOCUMENT_VIEWER_ENABLED)
+        - name: DOCUMENT_VIEWER_MAX_FILE_SIZE
+          value: $(DOCUMENT_VIEWER_MAX_FILE_SIZE)
+        - name: DOCUMENT_VIEWER_ALLOWED_TYPES
+          value: $(DOCUMENT_VIEWER_ALLOWED_TYPES)
+        - name: DOCUMENT_VIEWER_CACHE_TTL
+          value: $(DOCUMENT_VIEWER_CACHE_TTL)
+        - name: DOCUMENT_VIEWER_AUDIT_ENABLED
+          value: $(DOCUMENT_VIEWER_AUDIT_ENABLED)
+        - name: DOCUMENT_STORAGE_PATH
+          value: $(DOCUMENT_STORAGE_PATH)
+        - name: APP_KEY
+          valueFrom:
+            secretKeyRef:
+              name: documents-view-secrets
+              key: app_key
+        volumeMounts:
+        - name: document-storage
+          mountPath: /var/www/storage/documents
+      volumes:
+      - name: document-storage
+        persistentVolumeClaim:
+          claimName: documents-view-storage
