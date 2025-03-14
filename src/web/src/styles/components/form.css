@@ -1,0 +1,160 @@
+@import '../abstracts/variables.css';
+@import '../abstracts/mixins.css';
+
+/* Form Container Styles */
+.form-group {
+  margin-bottom: var(--spacing-md);
+  position: relative;
+}
+
+.form-group-inline {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.form-group-inline .form-field {
+  margin-bottom: 0;
+  flex: 1;
+}
+
+.form-group.has-error {
+  margin-bottom: calc(var(--spacing-md) + 20px);
+}
+
+.form-group.disabled {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.form-group.read-only {
+  pointer-events: none;
+}
+
+/* Form Field Styles */
+.form-field {
+  margin-bottom: var(--spacing-md);
+  position: relative;
+}
+
+.form-field:last-child {
+  margin-bottom: 0;
+}
+
+.form-field-input {
+  position: relative;
+}
+
+.form-field.has-error .form-field-input {
+  margin-bottom: var(--spacing-xs);
+}
+
+.form-field.disabled {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.form-field.read-only {
+  pointer-events: none;
+}
+
+/* Form Label Styles */
+.form-label {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.form-label-required::after {
+  content: '*';
+  color: var(--color-error);
+  margin-left: var(--spacing-xs);
+}
+
+.form-field.disabled .form-label {
+  color: var(--color-text-secondary);
+}
+
+/* Form Input Styles */
+.form-input {
+  @include input-base;
+}
+
+.form-input:focus {
+  @include input-focus;
+}
+
+.form-input.error {
+  @include input-error;
+}
+
+.form-input:disabled,
+.form-input.readonly {
+  @include input-disabled;
+}
+
+.form-input::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+}
+
+/* Validation Error Styles */
+.validation-error {
+  position: absolute;
+  font-size: var(--font-size-sm);
+  color: var(--color-error);
+  margin-top: var(--spacing-xs);
+}
+
+/* Read-Only Field Styles */
+.read-only-field {
+  margin-bottom: var(--spacing-md);
+}
+
+.read-only-value {
+  padding: var(--spacing-sm) 0;
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+}
+
+/* Form Control States */
+.form-control-success {
+  border-color: var(--color-success);
+}
+
+.form-control-warning {
+  border-color: var(--color-warning);
+}
+
+.form-control-error {
+  border-color: var(--color-error);
+}
+
+/* Form Helpers */
+.form-helper-text {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--spacing-xs);
+}
+
+.form-field-counter {
+  position: absolute;
+  right: var(--spacing-sm);
+  bottom: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* Responsive Adjustments */
+@include mobile {
+  .form-group-inline {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .form-group-inline .form-field {
+    margin-bottom: var(--spacing-md);
+  }
+}
