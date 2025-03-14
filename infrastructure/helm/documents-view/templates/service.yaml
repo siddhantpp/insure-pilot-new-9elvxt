@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "documents-view.fullname" . }}-frontend
+  labels:
+    {{- include "documents-view.labels" . | nindent 4 }}
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.frontend.port }}
+      targetPort: {{ .Values.service.frontend.targetPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "documents-view.selectorLabels" . | nindent 4 }}
+    component: frontend
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "documents-view.fullname" . }}-backend
+  labels:
+    {{- include "documents-view.labels" . | nindent 4 }}
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.backend.port }}
+      targetPort: {{ .Values.service.backend.targetPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "documents-view.selectorLabels" . | nindent 4 }}
+    component: backend
