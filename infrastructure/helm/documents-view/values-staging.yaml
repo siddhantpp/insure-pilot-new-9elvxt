@@ -1,0 +1,231 @@
+# Staging environment values for documents-view Helm chart
+# This file overrides the values.yaml with staging-specific settings
+
+replicaCount: 2
+
+image:
+  registry: registry.example.com
+  repository:
+    frontend: insurepilot/documents-view-frontend
+    backend: insurepilot/documents-view-backend
+  tag: staging
+  pullPolicy: IfNotPresent
+  pullSecrets:
+    - name: registry-credentials
+
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/documents-view-staging-role
+  name: documents-view-staging
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9090"
+  prometheus.io/path: "/metrics"
+  environment: staging
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+
+service:
+  type: ClusterIP
+  frontend:
+    port: 80
+    targetPort: 80
+  backend:
+    port: 8000
+    targetPort: 8000
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  hosts:
+    - host: documents-staging.insurepilot.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: frontend
+        - path: /api
+          pathType: Prefix
+          service: backend
+  tls:
+    - secretName: documents-view-staging-tls
+      hosts:
+        - documents-staging.insurepilot.com
+
+resources:
+  frontend:
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+  backend:
+    requests:
+      cpu: "2"
+      memory: "4Gi"
+    limits:
+      cpu: "4"
+      memory: "8Gi"
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 180
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+      - type: Pods
+        value: 1
+        periodSeconds: 60
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 25
+        periodSeconds: 60
+      - type: Pods
+        value: 1
+        periodSeconds: 60
+      selectPolicy: Min
+
+nodeSelector:
+  environment: staging
+
+tolerations: []
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app
+            operator: In
+            values:
+            - documents-view
+        topologyKey: kubernetes.io/hostname
+
+persistence:
+  enabled: true
+  storageClass: "standard"
+  size: "50Gi"
+  accessModes:
+    - ReadWriteMany
+
+config:
+  adobe_sdk_url: "https://documentcloud.adobe.com/view-sdk/main.js"
+  document_viewer_enabled: "true"
+  document_viewer_max_file_size: "50"
+  document_viewer_allowed_types: "pdf,docx,xlsx,pptx"
+  document_viewer_cache_ttl: "3600"
+  document_viewer_audit_enabled: "true"
+  document_storage_path: "/var/www/storage/documents"
+  app_debug: "false"
+  log_level: "info"
+
+externalDatabase:
+  enabled: false
+
+mariadb:
+  enabled: true
+  auth:
+    rootPassword: "staging-root-password"
+    database: "insurepilot_staging"
+    username: "insurepilot_staging"
+    password: "insurepilot_staging_password"
+  primary:
+    persistence:
+      enabled: true
+      size: "20Gi"
+    resources:
+      requests:
+        cpu: "1"
+        memory: "2Gi"
+      limits:
+        cpu: "2"
+        memory: "4Gi"
+
+externalRedis:
+  enabled: false
+
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    password: "staging-redis-password"
+  master:
+    persistence:
+      enabled: true
+      size: "8Gi"
+    resources:
+      requests:
+        cpu: "1"
+        memory: "2Gi"
+      limits:
+        cpu: "2"
+        memory: "4Gi"
+
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: "30s"
+    scrapeTimeout: "10s"
+  prometheusRule:
+    enabled: true
+    rules:
+      - alert: DocumentsViewHighErrorRate
+        expr: sum(rate(http_requests_total{app="documents-view",status=~"5.."}[5m])) / sum(rate(http_requests_total{app="documents-view"}[5m])) > 0.03
+        for: 5m
+        labels:
+          severity: warning
+          environment: staging
+        annotations:
+          summary: "Documents View high error rate in staging"
+          description: "Error rate is above 3% for the last 5 minutes in staging environment"
+      - alert: DocumentsViewHighLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{app="documents-view"}[5m])) by (le)) > 2.5
+        for: 5m
+        labels:
+          severity: warning
+          environment: staging
+        annotations:
+          summary: "Documents View high latency in staging"
+          description: "95th percentile of request duration is above 2.5 seconds for the last 5 minutes in staging environment"
+
+backup:
+  enabled: true
+  schedule: "0 2 * * *"
+  retention:
+    daily: 7
+    weekly: 2
+  destination:
+    s3:
+      bucket: "insurepilot-documents-backups"
+      region: "us-east-1"
+      path: "staging/documents-view"
