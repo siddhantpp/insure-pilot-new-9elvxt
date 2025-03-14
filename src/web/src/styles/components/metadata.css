@@ -1,0 +1,196 @@
+@import "../abstracts/variables.css";
+@import "../abstracts/mixins.css";
+
+/* Metadata Panel Container */
+/* Styles for the main metadata panel container */
+.metadata-panel {
+  background-color: var(--metadata-background);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: var(--spacing-lg);
+}
+
+.metadata-panel-header {
+  margin-bottom: var(--spacing-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.metadata-panel-title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.metadata-panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: var(--spacing-sm);
+}
+
+.metadata-panel-footer {
+  margin-top: var(--spacing-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Metadata Fields Section */
+/* Styles for the metadata fields container */
+.metadata-fields {
+  margin-bottom: var(--spacing-lg);
+}
+
+.metadata-field {
+  margin-bottom: var(--metadata-field-spacing);
+}
+
+.metadata-field:last-child {
+  margin-bottom: 0;
+}
+
+.metadata-field-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.metadata-field-value {
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+}
+
+.metadata-field-readonly {
+  color: var(--color-text-secondary);
+}
+
+/* Metadata Actions Section */
+/* Styles for document action buttons and controls */
+.metadata-actions {
+  margin-bottom: var(--spacing-lg);
+}
+
+.metadata-action-button {
+  width: 100%;
+  margin-bottom: var(--spacing-md);
+}
+
+.metadata-action-button:last-child {
+  margin-bottom: 0;
+}
+
+.metadata-action-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+}
+
+/* Document History Link */
+/* Styles for the document history link */
+.document-history-link {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-size: var(--font-size-base);
+  display: inline-flex;
+  align-items: center;
+}
+
+.document-history-link:hover {
+  text-decoration: underline;
+}
+
+.document-history-link:focus {
+  outline: none;
+  text-decoration: underline;
+}
+
+/* Ellipsis Menu Section */
+/* Styles for the ellipsis menu and navigation options */
+.metadata-menu-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.metadata-menu-divider {
+  width: 1px;
+  height: 24px;
+  background-color: var(--color-border);
+  margin: 0 var(--spacing-sm);
+}
+
+/* Save Indicator */
+/* Styles for the metadata saving status indicator */
+.save-indicator {
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-md);
+}
+
+.save-indicator-saving {
+  color: var(--color-text-secondary);
+}
+
+.save-indicator-saved {
+  color: var(--color-success);
+}
+
+.save-indicator-error {
+  color: var(--color-error);
+}
+
+/* Trash Document Section */
+/* Styles for the trash document button */
+.trash-document-container {
+  margin-top: auto;
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--color-border);
+}
+
+/* Responsive Adjustments */
+/* Styles for different screen sizes */
+@include tablet {
+  .metadata-panel {
+    padding: var(--spacing-md);
+  }
+  
+  .metadata-field {
+    margin-bottom: var(--spacing-md);
+  }
+}
+
+@include mobile {
+  .metadata-panel {
+    padding: var(--spacing-sm);
+  }
+  
+  .metadata-field {
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .metadata-panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .metadata-panel-title {
+    margin-bottom: var(--spacing-xs);
+  }
+  
+  .metadata-action-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .document-history-link {
+    margin-bottom: var(--spacing-xs);
+  }
+  
+  .metadata-menu-container {
+    margin-top: var(--spacing-xs);
+  }
+}
