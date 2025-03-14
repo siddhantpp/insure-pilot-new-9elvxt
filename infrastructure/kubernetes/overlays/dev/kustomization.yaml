@@ -1,0 +1,47 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: documents-view-dev
+resources:
+- ../../base
+namespace: documents-view-dev
+commonLabels:
+  environment: development
+  app: documents-view
+  part-of: insure-pilot
+  managed-by: kustomize
+configMapGenerator:
+- name: documents-view-config
+  behavior: merge
+  literals:
+  - DOCUMENT_VIEWER_ENABLED=true
+  - DOCUMENT_VIEWER_MAX_FILE_SIZE=50
+  - DOCUMENT_VIEWER_ALLOWED_TYPES=pdf,docx,xlsx,pptx
+  - DOCUMENT_VIEWER_CACHE_TTL=3600
+  - DOCUMENT_VIEWER_AUDIT_ENABLED=true
+  - APP_DEBUG=true
+  - ADOBE_SDK_URL=https://documentcloud.adobe.com/view-sdk/main.js
+  - DB_HOST=mariadb-dev
+  - DB_PORT=3306
+  - DB_DATABASE=insurepilot_dev
+  - REDIS_HOST=redis-dev
+  - REDIS_PORT=6379
+  - DOCUMENT_STORAGE_PATH=/var/www/storage/documents
+  - REGISTRY=registry.example.com
+  - TAG=dev
+secretGenerator:
+- name: documents-view-secrets
+  behavior: merge
+  type: Opaque
+  envs:
+  - .env.dev
+patchesStrategicMerge:
+- deployment-patch.yaml
+- hpa-patch.yaml
+images:
+- name: $(REGISTRY)/documents-view-frontend
+  newName: registry.example.com/documents-view-frontend
+  newTag: dev
+- name: $(REGISTRY)/documents-view-backend
+  newName: registry.example.com/documents-view-backend
+  newTag: dev
