@@ -1,0 +1,358 @@
+/* 
+* PDF Viewer Component Styles
+* 
+* This file contains styles for the PDF viewer component in the Documents View feature.
+* It includes styles for the PDF display area, navigation controls, and loading states.
+*
+* Version: 1.0.0
+*/
+
+@import "../abstracts/variables.css";
+@import "../abstracts/mixins.css";
+
+/* Main PDF container - holds the entire PDF viewer interface */
+.pdf-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: var(--pdf-background);
+  display: flex;
+  flex-direction: column;
+}
+
+/* PDF viewer area - container for the Adobe PDF viewer */
+.pdf-viewer {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* PDF header - displays filename and top controls */
+.pdf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md);
+  border-bottom: var(--border-width) var(--border-style) var(--color-border);
+  background-color: var(--color-background);
+}
+
+/* PDF filename display */
+.pdf-filename {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 80%;
+}
+
+/* Controls container - navigation and zoom controls at bottom of viewer */
+.pdf-controls-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--pdf-controls-height);
+  background-color: rgba(255, 255, 255, 0.9);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  z-index: 1;
+}
+
+/* Zoom controls container */
+.pdf-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* Zoom buttons */
+.pdf-zoom-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  padding: var(--spacing-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius-sm);
+  transition: all var(--transition-base);
+}
+
+.pdf-zoom-button:hover,
+.pdf-zoom-button:focus {
+  color: var(--color-primary);
+  background-color: var(--color-primary-light);
+}
+
+.pdf-zoom-button:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.pdf-zoom-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Navigation controls container */
+.pdf-navigation {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+/* Page info display */
+.pdf-page-info {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+/* Page input field */
+.pdf-page-input {
+  width: 40px;
+  height: 28px;
+  padding: 0 var(--spacing-xs);
+  border: var(--border-width) var(--border-style) var(--color-border);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.pdf-page-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-focus);
+}
+
+/* Navigation buttons (previous/next) */
+.pdf-nav-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  padding: var(--spacing-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius-sm);
+  transition: all var(--transition-base);
+}
+
+.pdf-nav-button:hover,
+.pdf-nav-button:focus {
+  color: var(--color-primary);
+  background-color: var(--color-primary-light);
+}
+
+.pdf-nav-button:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.pdf-nav-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Loading state container */
+.pdf-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--pdf-background);
+  z-index: 2;
+}
+
+/* Loading spinner */
+.pdf-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid var(--color-primary-light);
+  border-top-color: var(--color-primary);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Loading text */
+.pdf-loading-text {
+  margin-top: var(--spacing-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* Error state container */
+.pdf-error {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--pdf-background);
+  padding: var(--spacing-lg);
+  text-align: center;
+  z-index: 2;
+}
+
+/* Error icon */
+.pdf-error-icon {
+  font-size: 48px;
+  color: var(--color-error);
+  margin-bottom: var(--spacing-md);
+}
+
+/* Error message */
+.pdf-error-message {
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-lg);
+}
+
+/* Retry button */
+.pdf-retry-button {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-sm);
+  font-size: var(--font-size-base);
+  cursor: pointer;
+  transition: background-color var(--transition-base);
+}
+
+.pdf-retry-button:hover,
+.pdf-retry-button:focus {
+  background-color: var(--color-primary-dark);
+}
+
+.pdf-retry-button:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+/* Rotation button */
+.pdf-rotate-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  padding: var(--spacing-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius-sm);
+  transition: all var(--transition-base);
+}
+
+.pdf-rotate-button:hover,
+.pdf-rotate-button:focus {
+  color: var(--color-primary);
+  background-color: var(--color-primary-light);
+}
+
+.pdf-rotate-button:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+/* Fit to width/page button */
+.pdf-fit-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  padding: var(--spacing-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius-sm);
+  transition: all var(--transition-base);
+}
+
+.pdf-fit-button:hover,
+.pdf-fit-button:focus {
+  color: var(--color-primary);
+  background-color: var(--color-primary-light);
+}
+
+.pdf-fit-button:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.pdf-fit-button.active {
+  color: var(--color-primary);
+  background-color: var(--color-primary-light);
+}
+
+/* Adobe PDF viewer iframe */
+.adobe-pdf-viewer {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Responsive adjustments for tablet devices */
+@media (max-width: var(--breakpoint-tablet)) {
+  .pdf-controls-container {
+    flex-wrap: wrap;
+    justify-content: center;
+    height: auto;
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  .pdf-navigation,
+  .pdf-zoom-controls {
+    width: 100%;
+    justify-content: center;
+    margin-bottom: var(--spacing-xs);
+  }
+}
+
+/* Responsive adjustments for mobile devices */
+@media (max-width: var(--breakpoint-mobile)) {
+  .pdf-header {
+    padding: var(--spacing-sm);
+  }
+
+  .pdf-filename {
+    font-size: var(--font-size-sm);
+  }
+
+  .pdf-page-info {
+    display: none;
+  }
+
+  .pdf-controls-container {
+    position: relative;
+  }
+}
