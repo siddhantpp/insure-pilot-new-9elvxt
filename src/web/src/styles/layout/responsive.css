@@ -1,0 +1,275 @@
+/* Import variables for breakpoints and spacing */
+@import '../abstracts/variables.css';
+
+/* Responsive Styles */
+/* Styles for responsive behavior across different screen sizes */
+
+/* Utility classes for showing/hiding elements based on screen size */
+.hide-on-mobile {
+  @media (max-width: calc(var(--breakpoint-mobile) - 1px)) {
+    display: none !important;
+  }
+}
+
+.hide-on-tablet {
+  @media (min-width: var(--breakpoint-mobile)) and (max-width: calc(var(--breakpoint-tablet) - 1px)) {
+    display: none !important;
+  }
+}
+
+.hide-on-desktop {
+  @media (min-width: var(--breakpoint-tablet)) {
+    display: none !important;
+  }
+}
+
+.mobile-only {
+  display: none !important;
+  @media (max-width: calc(var(--breakpoint-mobile) - 1px)) {
+    display: block !important;
+  }
+}
+
+.tablet-only {
+  display: none !important;
+  @media (min-width: var(--breakpoint-mobile)) and (max-width: calc(var(--breakpoint-tablet) - 1px)) {
+    display: block !important;
+  }
+}
+
+.desktop-only {
+  display: none !important;
+  @media (min-width: var(--breakpoint-tablet)) {
+    display: block !important;
+  }
+}
+
+.mobile-flex {
+  display: none !important;
+  @media (max-width: calc(var(--breakpoint-mobile) - 1px)) {
+    display: flex !important;
+  }
+}
+
+.tablet-flex {
+  display: none !important;
+  @media (min-width: var(--breakpoint-mobile)) and (max-width: calc(var(--breakpoint-tablet) - 1px)) {
+    display: flex !important;
+  }
+}
+
+.desktop-flex {
+  display: none !important;
+  @media (min-width: var(--breakpoint-tablet)) {
+    display: flex !important;
+  }
+}
+
+/* Mobile-specific styles */
+@media (max-width: calc(var(--breakpoint-mobile) - 1px)) {
+  /* Convert side-by-side panels to stacked layout */
+  .document-panel, .metadata-panel {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--color-border);
+  }
+  
+  /* Adjust padding for smaller screens */
+  .panel-content {
+    padding: var(--spacing-md);
+  }
+  
+  .panel-header {
+    padding: var(--spacing-md);
+  }
+  
+  .panel-footer {
+    padding: var(--spacing-md);
+  }
+  
+  /* Stack the panels vertically */
+  .lightbox-overlay {
+    flex-direction: column;
+  }
+  
+  /* Mobile tab navigation for switching between document and metadata */
+  .mobile-tab-navigation {
+    display: flex;
+    border-bottom: 1px solid var(--color-border);
+  }
+  
+  .mobile-tab {
+    flex: 1;
+    text-align: center;
+    padding: var(--spacing-md);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+  }
+  
+  .mobile-tab.active {
+    border-bottom-color: var(--color-primary);
+    font-weight: var(--font-weight-medium);
+  }
+  
+  .mobile-panel-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  .mobile-panel {
+    flex: 1;
+    display: none;
+    overflow-y: auto;
+  }
+  
+  .mobile-panel.active {
+    display: block;
+  }
+}
+
+/* Tablet-specific styles */
+@media (min-width: var(--breakpoint-mobile)) and (max-width: calc(var(--breakpoint-tablet) - 1px)) {
+  /* Reduce right panel width slightly */
+  .metadata-panel {
+    width: 350px;
+  }
+  
+  /* Adjust padding for medium screens */
+  .panel-content {
+    padding: var(--spacing-md);
+  }
+  
+  /* Maintain side-by-side layout but with adjusted proportions */
+  .lightbox-overlay {
+    flex-direction: row;
+  }
+  
+  .document-panel {
+    flex: 1;
+  }
+}
+
+/* Desktop-specific styles */
+@media (min-width: var(--breakpoint-tablet)) {
+  /* Use full width for right panel */
+  .metadata-panel {
+    width: var(--right-panel-width);
+  }
+  
+  /* Use larger padding for more spacious layout */
+  .panel-content {
+    padding: var(--spacing-lg);
+  }
+  
+  /* Standard side-by-side layout */
+  .lightbox-overlay {
+    flex-direction: row;
+  }
+  
+  .document-panel {
+    flex: 1;
+  }
+}
+
+/* Responsive container that adapts to screen size */
+.responsive-container {
+  width: 100%;
+  margin: 0 auto;
+  
+  @media (max-width: calc(var(--breakpoint-mobile) - 1px)) {
+    padding: 0 var(--spacing-md);
+  }
+  
+  @media (min-width: var(--breakpoint-mobile)) and (max-width: calc(var(--breakpoint-tablet) - 1px)) {
+    padding: 0 var(--spacing-lg);
+  }
+  
+  @media (min-width: var(--breakpoint-tablet)) {
+    max-width: var(--max-content-width);
+    padding: 0 var(--spacing-lg);
+  }
+}
+
+/* Text that adapts size based on screen size */
+.responsive-text {
+  @media (max-width: calc(var(--breakpoint-mobile) - 1px)) {
+    font-size: var(--font-size-sm);
+  }
+  
+  @media (min-width: var(--breakpoint-mobile)) and (max-width: calc(var(--breakpoint-tablet) - 1px)) {
+    font-size: var(--font-size-base);
+  }
+  
+  @media (min-width: var(--breakpoint-tablet)) {
+    font-size: var(--font-size-base);
+  }
+}
+
+/* Spacing that adapts based on screen size */
+.responsive-spacing {
+  @media (max-width: calc(var(--breakpoint-mobile) - 1px)) {
+    margin-bottom: var(--spacing-md);
+  }
+  
+  @media (min-width: var(--breakpoint-mobile)) and (max-width: calc(var(--breakpoint-tablet) - 1px)) {
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  @media (min-width: var(--breakpoint-tablet)) {
+    margin-bottom: var(--spacing-lg);
+  }
+}
+
+/* Responsive styling for history panel */
+.history-panel {
+  @media (max-width: calc(var(--breakpoint-mobile) - 1px)) {
+    width: 100%;
+  }
+  
+  @media (min-width: var(--breakpoint-mobile)) and (max-width: calc(var(--breakpoint-tablet) - 1px)) {
+    width: 350px;
+  }
+  
+  @media (min-width: var(--breakpoint-tablet)) {
+    width: var(--right-panel-width);
+  }
+}
+
+/* Responsive styling for form fields */
+.form-field {
+  @media (max-width: calc(var(--breakpoint-mobile) - 1px)) {
+    margin-bottom: var(--spacing-md);
+  }
+  
+  @media (min-width: var(--breakpoint-mobile)) {
+    margin-bottom: var(--spacing-lg);
+  }
+}
+
+/* Responsive styling for dropdown menus */
+.dropdown-menu {
+  @media (max-width: calc(var(--breakpoint-mobile) - 1px)) {
+    max-height: 200px;
+    width: 100%;
+  }
+  
+  @media (min-width: var(--breakpoint-mobile)) {
+    max-height: 300px;
+    width: auto;
+    min-width: 200px;
+  }
+}
+
+/* Responsive styling for confirmation dialogs */
+.confirmation-dialog {
+  @media (max-width: calc(var(--breakpoint-mobile) - 1px)) {
+    width: 90%;
+    max-width: none;
+  }
+  
+  @media (min-width: var(--breakpoint-mobile)) {
+    width: 400px;
+    max-width: 90%;
+  }
+}
