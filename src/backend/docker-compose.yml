@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: ../infrastructure/docker/backend.Dockerfile
+    volumes:
+      - .:/var/www/html
+      - ./storage/app:/var/www/html/storage/app
+    depends_on:
+      - db
+      - redis
+      - storage
+    environment:
+      - APP_ENV=local
+      - DB_HOST=db
+      - DB_DATABASE=insurepilot
+      - DB_USERNAME=insurepilot
+      - DB_PASSWORD=secret
+      - REDIS_HOST=redis
+      - STORAGE_PATH=/var/www/html/storage/app
+
+  web:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+      - ../infrastructure/docker/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+
+  db:
+    image: mariadb:10.6
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_DATABASE=insurepilot
+      - MYSQL_USER=insurepilot
+      - MYSQL_PASSWORD=secret
+      - MYSQL_ROOT_PASSWORD=secret
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  storage:
+    image: alpine
+    command: sh -c "mkdir -p /storage && chmod 777 /storage && tail -f /dev/null"
+    volumes:
+      - document_storage:/storage
+
+volumes:
+  db_data:
+  redis_data:
+  document_storage:
