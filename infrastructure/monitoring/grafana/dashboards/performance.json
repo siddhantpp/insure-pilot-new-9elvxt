@@ -1,0 +1,1521 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "documents-view-performance",
+    "title": "Documents View Performance Dashboard",
+    "tags": ["documents", "performance", "monitoring", "insure-pilot"],
+    "timezone": "browser",
+    "editable": true,
+    "graphTooltip": 1,
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "refresh": "30s",
+    "panels": [
+      {
+        "title": "API Performance",
+        "type": "row",
+        "collapsed": false,
+        "panels": [],
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "title": "API Response Time by Endpoint",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 1
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(api_response_time_seconds_bucket{service=\"document-service\"}[5m])) by (le, endpoint))",
+            "legendFormat": "{{endpoint}} P95"
+          },
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(api_response_time_seconds_bucket{service=\"document-service\"}[5m])) by (le, endpoint))",
+            "legendFormat": "{{endpoint}} P50"
+          }
+        ],
+        "thresholds": [
+          {
+            "value": 0.5,
+            "colorMode": "warning",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          },
+          {
+            "value": 1,
+            "colorMode": "critical",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Response Time"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        },
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        }
+      },
+      {
+        "title": "API Request Rate",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 1
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(api_requests_total{service=\"document-service\"}[5m])) by (endpoint, method)",
+            "legendFormat": "{{method}} {{endpoint}}"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "reqps",
+            "label": "Requests/sec"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "API Error Rate",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 9
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(api_requests_total{service=\"document-service\", status_code=~\"5..\"}[5m])) / sum(rate(api_requests_total{service=\"document-service\"}[5m]))",
+            "legendFormat": "Error Rate"
+          }
+        ],
+        "thresholds": [
+          {
+            "value": 0.01,
+            "colorMode": "warning",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          },
+          {
+            "value": 0.05,
+            "colorMode": "critical",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "percentunit",
+            "label": "Error Rate",
+            "max": 1
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "API Latency Heatmap",
+        "type": "heatmap",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 9
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(api_response_time_seconds_bucket{service=\"document-service\"}[5m])) by (le)",
+            "format": "heatmap",
+            "legendFormat": "{{le}}"
+          }
+        ],
+        "yAxis": {
+          "format": "s",
+          "decimals": 0,
+          "logBase": 1
+        },
+        "cards": {
+          "cardPadding": null,
+          "cardRound": null
+        },
+        "color": {
+          "mode": "spectrum",
+          "steps": 20,
+          "scheme": "interpolateInferno"
+        },
+        "tooltip": {
+          "show": true,
+          "showHistogram": true
+        }
+      },
+      {
+        "title": "Document Operations",
+        "type": "row",
+        "collapsed": false,
+        "panels": [],
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 17
+        }
+      },
+      {
+        "title": "Document Load Time",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 18
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(document_load_time_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P95"
+          },
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(document_load_time_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P50"
+          }
+        ],
+        "thresholds": [
+          {
+            "value": 3,
+            "colorMode": "warning",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          },
+          {
+            "value": 5,
+            "colorMode": "critical",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Load Time"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "PDF Rendering Time",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 18
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(pdf_render_time_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P95"
+          },
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(pdf_render_time_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P50"
+          }
+        ],
+        "thresholds": [
+          {
+            "value": 2,
+            "colorMode": "warning",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          },
+          {
+            "value": 4,
+            "colorMode": "critical",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Render Time"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "Metadata Save Time",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 26
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(metadata_save_time_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P95"
+          },
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(metadata_save_time_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P50"
+          }
+        ],
+        "thresholds": [
+          {
+            "value": 1,
+            "colorMode": "warning",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          },
+          {
+            "value": 3,
+            "colorMode": "critical",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Save Time"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "Document Processing Time",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 26
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(document_processing_time_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P95"
+          },
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(document_processing_time_seconds_bucket[5m])) by (le))",
+            "legendFormat": "P50"
+          }
+        ],
+        "thresholds": [
+          {
+            "value": 2,
+            "colorMode": "warning",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          },
+          {
+            "value": 4,
+            "colorMode": "critical",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Processing Time"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "Frontend Performance",
+        "type": "row",
+        "collapsed": false,
+        "panels": [],
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 34
+        }
+      },
+      {
+        "title": "Page Load Time",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 35
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(page_load_time_seconds_bucket{page=\"document-viewer\"}[5m])) by (le))",
+            "legendFormat": "P95"
+          },
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(page_load_time_seconds_bucket{page=\"document-viewer\"}[5m])) by (le))",
+            "legendFormat": "P50"
+          }
+        ],
+        "thresholds": [
+          {
+            "value": 3,
+            "colorMode": "warning",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          },
+          {
+            "value": 5,
+            "colorMode": "critical",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Load Time"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "UI Interaction Time",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 35
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(ui_interaction_time_seconds_bucket{component=~\"dropdown|button|form\"}[5m])) by (le, component))",
+            "legendFormat": "{{component}} P95"
+          }
+        ],
+        "thresholds": [
+          {
+            "value": 0.3,
+            "colorMode": "warning",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          },
+          {
+            "value": 1,
+            "colorMode": "critical",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Interaction Time"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "JavaScript Errors",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 43
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(javascript_errors_total{app=\"documents-view\"}[5m])) by (error_type)",
+            "legendFormat": "{{error_type}}"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "short",
+            "label": "Errors/min"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "Client-Side Performance",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 43
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(client_timing_seconds_bucket{metric=~\"fcp|lcp|fid|cls\"}[5m])) by (le, metric))",
+            "legendFormat": "{{metric}} P95"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Time"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "Database Performance",
+        "type": "row",
+        "collapsed": false,
+        "panels": [],
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 51
+        }
+      },
+      {
+        "title": "Query Latency by Type",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 52
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(database_query_time_seconds_bucket{service=\"document-service\"}[5m])) by (le, query_type))",
+            "legendFormat": "{{query_type}} P95"
+          }
+        ],
+        "thresholds": [
+          {
+            "value": 0.2,
+            "colorMode": "warning",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          },
+          {
+            "value": 0.5,
+            "colorMode": "critical",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Query Time"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "Database Connections",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 52
+        },
+        "targets": [
+          {
+            "expr": "sum(database_connections{service=\"document-service\"}) by (state)",
+            "legendFormat": "{{state}}"
+          }
+        ],
+        "thresholds": [
+          {
+            "value": 80,
+            "colorMode": "warning",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          },
+          {
+            "value": 100,
+            "colorMode": "critical",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "short",
+            "label": "Connections"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "Slow Queries",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 60
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(slow_queries_total{service=\"document-service\"}[5m])) by (query_type)",
+            "legendFormat": "{{query_type}}"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "short",
+            "label": "Queries/min"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "Database Transaction Rate",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 60
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(database_transactions_total{service=\"document-service\"}[5m])) by (status)",
+            "legendFormat": "{{status}}"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "short",
+            "label": "Transactions/sec"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "Cache Performance",
+        "type": "row",
+        "collapsed": false,
+        "panels": [],
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 68
+        }
+      },
+      {
+        "title": "Cache Hit Rate",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 69
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(cache_hits_total{service=\"document-service\", cache_type=~\"metadata|document|policy\"}[5m])) by (cache_type) / (sum(rate(cache_hits_total{service=\"document-service\", cache_type=~\"metadata|document|policy\"}[5m])) by (cache_type) + sum(rate(cache_misses_total{service=\"document-service\", cache_type=~\"metadata|document|policy\"}[5m])) by (cache_type))",
+            "legendFormat": "{{cache_type}}"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "percentunit",
+            "label": "Hit Rate"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "Cache Operations",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 69
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(cache_operation_total{service=\"document-service\", operation=~\"get|set|delete\"}[5m])) by (operation, cache_type)",
+            "legendFormat": "{{cache_type}} - {{operation}}"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "ops",
+            "label": "Operations/sec"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "Cache Memory Usage",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 77
+        },
+        "targets": [
+          {
+            "expr": "sum(cache_memory_bytes{service=\"document-service\"}) by (cache_type)",
+            "legendFormat": "{{cache_type}}"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "bytes",
+            "label": "Memory"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "Cache Evictions",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 77
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(cache_evictions_total{service=\"document-service\"}[5m])) by (cache_type)",
+            "legendFormat": "{{cache_type}}"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "short",
+            "label": "Evictions/sec"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "System Resources",
+        "type": "row",
+        "collapsed": false,
+        "panels": [],
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 85
+        }
+      },
+      {
+        "title": "CPU Usage by Pod",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 86
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(container_cpu_usage_seconds_total{pod=~\"document-viewer.*\"}[5m])) by (pod)",
+            "legendFormat": "{{pod}}"
+          }
+        ],
+        "thresholds": [
+          {
+            "value": 0.7,
+            "colorMode": "warning",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          },
+          {
+            "value": 0.85,
+            "colorMode": "critical",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "percentunit",
+            "label": "CPU Usage"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "Memory Usage by Pod",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 86
+        },
+        "targets": [
+          {
+            "expr": "sum(container_memory_usage_bytes{pod=~\"document-viewer.*\"}) by (pod)",
+            "legendFormat": "{{pod}}"
+          }
+        ],
+        "thresholds": [
+          {
+            "value": 1073741824,
+            "colorMode": "warning",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          },
+          {
+            "value": 1610612736,
+            "colorMode": "critical",
+            "op": "gt",
+            "line": true,
+            "fill": false
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "bytes",
+            "label": "Memory Usage"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "Network Traffic by Pod",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 94
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(container_network_receive_bytes_total{pod=~\"document-viewer.*\"}[5m])) by (pod)",
+            "legendFormat": "{{pod}} Rx"
+          },
+          {
+            "expr": "sum(rate(container_network_transmit_bytes_total{pod=~\"document-viewer.*\"}[5m])) by (pod)",
+            "legendFormat": "{{pod}} Tx"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "Bps",
+            "label": "Traffic"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "Disk I/O",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 94
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(container_fs_reads_bytes_total{pod=~\"document-viewer.*\"}[5m])) by (pod)",
+            "legendFormat": "{{pod}} Reads"
+          },
+          {
+            "expr": "sum(rate(container_fs_writes_bytes_total{pod=~\"document-viewer.*\"}[5m])) by (pod)",
+            "legendFormat": "{{pod}} Writes"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "Bps",
+            "label": "I/O"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "SLA Compliance",
+        "type": "row",
+        "collapsed": false,
+        "panels": [],
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 102
+        }
+      },
+      {
+        "title": "Document Load Time SLA",
+        "type": "gauge",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 6,
+          "x": 0,
+          "y": 103
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(document_load_time_seconds_count{le=\"3\"}[1h])) / sum(rate(document_load_time_seconds_count[1h]))",
+            "legendFormat": "% within SLA"
+          }
+        ],
+        "options": {
+          "thresholds": [
+            {
+              "color": "red",
+              "value": 0
+            },
+            {
+              "color": "yellow",
+              "value": 0.95
+            },
+            {
+              "color": "green",
+              "value": 0.99
+            }
+          ],
+          "maxValue": 1,
+          "minValue": 0,
+          "valueMappings": [],
+          "valueOptions": {
+            "decimals": 2,
+            "prefix": "",
+            "stat": "current",
+            "suffix": "",
+            "unit": "percentunit"
+          }
+        }
+      },
+      {
+        "title": "API Response Time SLA",
+        "type": "gauge",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 6,
+          "x": 6,
+          "y": 103
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(api_response_time_seconds_count{le=\"0.5\",service=\"document-service\"}[1h])) / sum(rate(api_response_time_seconds_count{service=\"document-service\"}[1h]))",
+            "legendFormat": "% within SLA"
+          }
+        ],
+        "options": {
+          "thresholds": [
+            {
+              "color": "red",
+              "value": 0
+            },
+            {
+              "color": "yellow",
+              "value": 0.95
+            },
+            {
+              "color": "green",
+              "value": 0.99
+            }
+          ],
+          "maxValue": 1,
+          "minValue": 0,
+          "valueMappings": [],
+          "valueOptions": {
+            "decimals": 2,
+            "prefix": "",
+            "stat": "current",
+            "suffix": "",
+            "unit": "percentunit"
+          }
+        }
+      },
+      {
+        "title": "PDF Rendering Time SLA",
+        "type": "gauge",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 6,
+          "x": 12,
+          "y": 103
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(pdf_render_time_seconds_count{le=\"2\"}[1h])) / sum(rate(pdf_render_time_seconds_count[1h]))",
+            "legendFormat": "% within SLA"
+          }
+        ],
+        "options": {
+          "thresholds": [
+            {
+              "color": "red",
+              "value": 0
+            },
+            {
+              "color": "yellow",
+              "value": 0.95
+            },
+            {
+              "color": "green",
+              "value": 0.99
+            }
+          ],
+          "maxValue": 1,
+          "minValue": 0,
+          "valueMappings": [],
+          "valueOptions": {
+            "decimals": 2,
+            "prefix": "",
+            "stat": "current",
+            "suffix": "",
+            "unit": "percentunit"
+          }
+        }
+      },
+      {
+        "title": "Metadata Save Time SLA",
+        "type": "gauge",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 6,
+          "x": 18,
+          "y": 103
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(metadata_save_time_seconds_count{le=\"1\"}[1h])) / sum(rate(metadata_save_time_seconds_count[1h]))",
+            "legendFormat": "% within SLA"
+          }
+        ],
+        "options": {
+          "thresholds": [
+            {
+              "color": "red",
+              "value": 0
+            },
+            {
+              "color": "yellow",
+              "value": 0.95
+            },
+            {
+              "color": "green",
+              "value": 0.99
+            }
+          ],
+          "maxValue": 1,
+          "minValue": 0,
+          "valueMappings": [],
+          "valueOptions": {
+            "decimals": 2,
+            "prefix": "",
+            "stat": "current",
+            "suffix": "",
+            "unit": "percentunit"
+          }
+        }
+      },
+      {
+        "title": "Load Testing Results",
+        "type": "row",
+        "collapsed": false,
+        "panels": [],
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 111
+        }
+      },
+      {
+        "title": "Concurrent Users",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 112
+        },
+        "targets": [
+          {
+            "expr": "sum(active_users{service=\"document-service\"})",
+            "legendFormat": "Active Users"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "short",
+            "label": "Users"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "Response Time vs Load",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 112
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(api_response_time_seconds_bucket{service=\"document-service\"}[5m])) by (le))",
+            "legendFormat": "P95 Response Time"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "s",
+            "label": "Response Time"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "Error Rate vs Load",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 120
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(api_requests_total{service=\"document-service\", status_code=~\"5..\"}[5m])) / sum(rate(api_requests_total{service=\"document-service\"}[5m]))",
+            "legendFormat": "Error Rate"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "percentunit",
+            "label": "Error Rate"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      },
+      {
+        "title": "Throughput",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 120
+        },
+        "targets": [
+          {
+            "expr": "sum(rate(api_requests_total{service=\"document-service\"}[5m]))",
+            "legendFormat": "Requests/sec"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "reqps",
+            "label": "Throughput"
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "xaxis": {
+          "mode": "time",
+          "show": true
+        }
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "environment",
+          "type": "custom",
+          "datasource": null,
+          "options": [
+            {
+              "text": "Production",
+              "value": "prod",
+              "selected": true
+            },
+            {
+              "text": "Staging",
+              "value": "staging",
+              "selected": false
+            },
+            {
+              "text": "Development",
+              "value": "dev",
+              "selected": false
+            }
+          ],
+          "current": {
+            "text": "Production",
+            "value": "prod"
+          },
+          "label": "Environment",
+          "skipUrlSync": false
+        },
+        {
+          "name": "interval",
+          "type": "interval",
+          "datasource": null,
+          "options": [
+            {
+              "text": "1m",
+              "value": "1m",
+              "selected": false
+            },
+            {
+              "text": "5m",
+              "value": "5m",
+              "selected": true
+            },
+            {
+              "text": "15m",
+              "value": "15m",
+              "selected": false
+            },
+            {
+              "text": "30m",
+              "value": "30m",
+              "selected": false
+            },
+            {
+              "text": "1h",
+              "value": "1h",
+              "selected": false
+            },
+            {
+              "text": "6h",
+              "value": "6h",
+              "selected": false
+            },
+            {
+              "text": "12h",
+              "value": "12h",
+              "selected": false
+            },
+            {
+              "text": "24h",
+              "value": "24h",
+              "selected": false
+            }
+          ],
+          "current": {
+            "text": "5m",
+            "value": "5m"
+          },
+          "label": "Interval",
+          "auto": false,
+          "refresh": 2,
+          "skipUrlSync": false
+        },
+        {
+          "name": "component",
+          "type": "query",
+          "datasource": "Prometheus",
+          "query": "label_values(api_requests_total{service=\"document-service\"}, component)",
+          "regex": "",
+          "sort": 1,
+          "refresh": 1,
+          "multi": true,
+          "includeAll": true,
+          "current": {
+            "text": "All",
+            "value": "$__all"
+          },
+          "label": "Component",
+          "skipUrlSync": false
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "Prometheus",
+          "expr": "changes(kube_deployment_status_observed_generation{deployment=~\"document-viewer.*\"}[5m]) > 0",
+          "iconColor": "rgba(255, 96, 96, 1)",
+          "enable": true,
+          "type": "dashboard"
+        },
+        {
+          "name": "Scaling Events",
+          "datasource": "Prometheus",
+          "expr": "changes(kube_deployment_spec_replicas{deployment=~\"document-viewer.*\"}[5m]) > 0",
+          "iconColor": "rgba(255, 204, 0, 1)",
+          "enable": true,
+          "type": "dashboard"
+        },
+        {
+          "name": "Performance Alerts",
+          "datasource": "Loki",
+          "expr": "{app=\"document-viewer\"} |= \"PERFORMANCE WARNING\" or {app=\"document-viewer\"} |= \"PERFORMANCE ERROR\"",
+          "iconColor": "rgba(255, 0, 0, 1)",
+          "enable": true,
+          "type": "dashboard"
+        }
+      ]
+    }
+  }
+}
