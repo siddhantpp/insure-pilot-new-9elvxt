@@ -1,0 +1,298 @@
+name: Deploy Documents View
+
+on:
+  repository_dispatch:
+    types: [deploy-documents-view]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+        default: 'development'
+      version:
+        description: 'Version to deploy (tag or branch-sha)'
+        required: true
+        type: string
+      deployment_strategy:
+        description: 'Deployment strategy to use'
+        required: true
+        type: choice
+        options:
+          - helm
+          - kustomize
+        default: 'helm'
+
+env:
+  REGISTRY: ${{ secrets.GITLAB_REGISTRY }}/insurepilot/documents-view
+  KUBECONFIG_DEV: ${{ secrets.KUBECONFIG_DEV }}
+  KUBECONFIG_STAGING: ${{ secrets.KUBECONFIG_STAGING }}
+  KUBECONFIG_PROD: ${{ secrets.KUBECONFIG_PROD }}
+
+jobs:
+  prepare-deployment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set environment variables from dispatch
+        if: github.event_name == 'repository_dispatch'
+        run: |
+          echo "ENVIRONMENT=${{ github.event.client_payload.environment }}" >> $GITHUB_ENV
+          echo "VERSION=${{ github.event.client_payload.branch }}-${{ github.event.client_payload.sha }}" >> $GITHUB_ENV
+          echo "DEPLOYMENT_STRATEGY=helm" >> $GITHUB_ENV
+      
+      - name: Set environment variables from workflow dispatch
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+          echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_ENV
+          echo "DEPLOYMENT_STRATEGY=${{ github.event.inputs.deployment_strategy }}" >> $GITHUB_ENV
+      
+      - name: Validate environment
+        run: |
+          if [[ "$ENVIRONMENT" != "development" && "$ENVIRONMENT" != "staging" && "$ENVIRONMENT" != "production" ]]; then
+            echo "Invalid environment: $ENVIRONMENT"
+            exit 1
+          fi
+      
+      - name: Set namespace based on environment
+        run: |
+          if [[ "$ENVIRONMENT" == "development" ]]; then
+            echo "NAMESPACE=documents-view-dev" >> $GITHUB_ENV
+          elif [[ "$ENVIRONMENT" == "staging" ]]; then
+            echo "NAMESPACE=documents-view-staging" >> $GITHUB_ENV
+          elif [[ "$ENVIRONMENT" == "production" ]]; then
+            echo "NAMESPACE=documents-view-prod" >> $GITHUB_ENV
+          fi
+      
+      - name: Set deployment strategy based on environment
+        run: |
+          if [[ "$ENVIRONMENT" == "development" && "$DEPLOYMENT_STRATEGY" == "" ]]; then
+            echo "DEPLOYMENT_STRATEGY=direct" >> $GITHUB_ENV
+          elif [[ "$ENVIRONMENT" == "staging" && "$DEPLOYMENT_STRATEGY" == "" ]]; then
+            echo "DEPLOYMENT_STRATEGY=blue-green" >> $GITHUB_ENV
+          elif [[ "$ENVIRONMENT" == "production" && "$DEPLOYMENT_STRATEGY" == "" ]]; then
+            echo "DEPLOYMENT_STRATEGY=canary" >> $GITHUB_ENV
+          fi
+      
+      - name: Output deployment parameters
+        run: |
+          echo "Deploying to $ENVIRONMENT environment"
+          echo "Version: $VERSION"
+          echo "Namespace: $NAMESPACE"
+          echo "Deployment Strategy: $DEPLOYMENT_STRATEGY"
+    
+    outputs:
+      environment: ${{ env.ENVIRONMENT }}
+      version: ${{ env.VERSION }}
+      namespace: ${{ env.NAMESPACE }}
+      deployment_strategy: ${{ env.DEPLOYMENT_STRATEGY }}
+
+  approval:
+    needs: [prepare-deployment]
+    runs-on: ubuntu-latest
+    if: needs.prepare-deployment.outputs.environment == 'production'
+    environment:
+      name: production
+      url: https://documents.insurepilot.com
+    steps:
+      - name: Approval notification
+        run: echo "Production deployment approved"
+
+  deploy:
+    needs: [prepare-deployment, approval]
+    if: always() && (needs.approval.result == 'success' || needs.prepare-deployment.outputs.environment != 'production')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: v1.26.0
+      
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.11.0
+      
+      - name: Set up Kustomize
+        run: |
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+      
+      - name: Set KUBECONFIG
+        run: |
+          if [[ "${{ needs.prepare-deployment.outputs.environment }}" == "development" ]]; then
+            echo "${{ env.KUBECONFIG_DEV }}" > kubeconfig
+          elif [[ "${{ needs.prepare-deployment.outputs.environment }}" == "staging" ]]; then
+            echo "${{ env.KUBECONFIG_STAGING }}" > kubeconfig
+          elif [[ "${{ needs.prepare-deployment.outputs.environment }}" == "production" ]]; then
+            echo "${{ env.KUBECONFIG_PROD }}" > kubeconfig
+          fi
+          echo "KUBECONFIG=$(pwd)/kubeconfig" >> $GITHUB_ENV
+      
+      - name: Deploy with Helm
+        if: needs.prepare-deployment.outputs.deployment_strategy == 'helm'
+        run: |
+          chmod +x infrastructure/scripts/deploy.sh
+          infrastructure/scripts/deploy.sh --environment ${{ needs.prepare-deployment.outputs.environment }} --version ${{ needs.prepare-deployment.outputs.version }} --namespace ${{ needs.prepare-deployment.outputs.namespace }} --method helm
+      
+      - name: Deploy with Kustomize
+        if: needs.prepare-deployment.outputs.deployment_strategy == 'kustomize'
+        run: |
+          chmod +x infrastructure/scripts/deploy.sh
+          infrastructure/scripts/deploy.sh --environment ${{ needs.prepare-deployment.outputs.environment }} --version ${{ needs.prepare-deployment.outputs.version }} --namespace ${{ needs.prepare-deployment.outputs.namespace }} --method kustomize
+      
+      - name: Deploy with Blue-Green (Staging)
+        if: needs.prepare-deployment.outputs.environment == 'staging' && needs.prepare-deployment.outputs.deployment_strategy == 'blue-green'
+        run: |
+          chmod +x infrastructure/scripts/deploy.sh
+          infrastructure/scripts/deploy.sh --environment staging --version ${{ needs.prepare-deployment.outputs.version }} --namespace ${{ needs.prepare-deployment.outputs.namespace }} --method blue-green
+      
+      - name: Deploy Canary (Production)
+        if: needs.prepare-deployment.outputs.environment == 'production' && needs.prepare-deployment.outputs.deployment_strategy == 'canary'
+        run: |
+          chmod +x infrastructure/scripts/deploy.sh
+          infrastructure/scripts/deploy.sh --environment production --version ${{ needs.prepare-deployment.outputs.version }} --namespace ${{ needs.prepare-deployment.outputs.namespace }} --method canary --traffic-percentage 10
+      
+      - name: Verify deployment
+        run: |
+          kubectl --kubeconfig=$KUBECONFIG -n ${{ needs.prepare-deployment.outputs.namespace }} rollout status deployment/documents-view-frontend
+          kubectl --kubeconfig=$KUBECONFIG -n ${{ needs.prepare-deployment.outputs.namespace }} rollout status deployment/documents-view-backend
+
+  promote-canary:
+    needs: [prepare-deployment, deploy]
+    if: needs.prepare-deployment.outputs.environment == 'production' && needs.prepare-deployment.outputs.deployment_strategy == 'canary' && needs.deploy.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: v1.26.0
+      
+      - name: Set KUBECONFIG
+        run: |
+          echo "${{ env.KUBECONFIG_PROD }}" > kubeconfig
+          echo "KUBECONFIG=$(pwd)/kubeconfig" >> $GITHUB_ENV
+      
+      - name: Monitor canary health
+        run: |
+          chmod +x infrastructure/scripts/monitor-canary.sh
+          infrastructure/scripts/monitor-canary.sh --namespace ${{ needs.prepare-deployment.outputs.namespace }} --deployment documents-view --duration 10m
+      
+      - name: Promote canary to stable
+        run: |
+          chmod +x infrastructure/scripts/deploy.sh
+          infrastructure/scripts/deploy.sh --environment production --namespace ${{ needs.prepare-deployment.outputs.namespace }} --method promote-canary
+      
+      - name: Verify stable deployment
+        run: |
+          kubectl --kubeconfig=$KUBECONFIG -n ${{ needs.prepare-deployment.outputs.namespace }} rollout status deployment/documents-view-frontend
+          kubectl --kubeconfig=$KUBECONFIG -n ${{ needs.prepare-deployment.outputs.namespace }} rollout status deployment/documents-view-backend
+
+  rollback:
+    needs: [prepare-deployment, deploy]
+    if: needs.deploy.result == 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: v1.26.0
+      
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.11.0
+      
+      - name: Set KUBECONFIG
+        run: |
+          if [[ "${{ needs.prepare-deployment.outputs.environment }}" == "development" ]]; then
+            echo "${{ env.KUBECONFIG_DEV }}" > kubeconfig
+          elif [[ "${{ needs.prepare-deployment.outputs.environment }}" == "staging" ]]; then
+            echo "${{ env.KUBECONFIG_STAGING }}" > kubeconfig
+          elif [[ "${{ needs.prepare-deployment.outputs.environment }}" == "production" ]]; then
+            echo "${{ env.KUBECONFIG_PROD }}" > kubeconfig
+          fi
+          echo "KUBECONFIG=$(pwd)/kubeconfig" >> $GITHUB_ENV
+      
+      - name: Rollback deployment
+        run: |
+          chmod +x infrastructure/scripts/rollback.sh
+          infrastructure/scripts/rollback.sh --environment ${{ needs.prepare-deployment.outputs.environment }} --namespace ${{ needs.prepare-deployment.outputs.namespace }} --deployment-strategy ${{ needs.prepare-deployment.outputs.deployment_strategy }}
+      
+      - name: Verify rollback
+        run: |
+          kubectl --kubeconfig=$KUBECONFIG -n ${{ needs.prepare-deployment.outputs.namespace }} rollout status deployment/documents-view-frontend
+          kubectl --kubeconfig=$KUBECONFIG -n ${{ needs.prepare-deployment.outputs.namespace }} rollout status deployment/documents-view-backend
+
+  notify:
+    needs: [prepare-deployment, deploy, promote-canary, rollback]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set notification message for success
+        if: (needs.deploy.result == 'success' && needs.prepare-deployment.outputs.environment != 'production') || (needs.promote-canary.result == 'success' && needs.prepare-deployment.outputs.environment == 'production')
+        run: |
+          echo "MESSAGE=✅ Documents View successfully deployed to ${{ needs.prepare-deployment.outputs.environment }} environment.\nVersion: ${{ needs.prepare-deployment.outputs.version }}\nNamespace: ${{ needs.prepare-deployment.outputs.namespace }}" >> $GITHUB_ENV
+      
+      - name: Set notification message for failure
+        if: needs.deploy.result == 'failure'
+        run: |
+          echo "MESSAGE=❌ Documents View deployment to ${{ needs.prepare-deployment.outputs.environment }} environment failed.\nVersion: ${{ needs.prepare-deployment.outputs.version }}\nNamespace: ${{ needs.prepare-deployment.outputs.namespace }}\nRollback status: ${{ needs.rollback.result == 'success' && 'successful' || 'failed' }}" >> $GITHUB_ENV
+      
+      - name: Set notification message for canary
+        if: needs.deploy.result == 'success' && needs.prepare-deployment.outputs.environment == 'production' && needs.prepare-deployment.outputs.deployment_strategy == 'canary' && needs.promote-canary.result != 'success'
+        run: |
+          echo "MESSAGE=🔶 Documents View canary deployment to production environment successful.\nVersion: ${{ needs.prepare-deployment.outputs.version }}\nNamespace: ${{ needs.prepare-deployment.outputs.namespace }}\nCanary promotion: pending" >> $GITHUB_ENV
+      
+      - name: Send Slack notification
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          payload: '{"text":"${{ env.MESSAGE }}"}'
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      
+      - name: Create GitHub deployment status
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const environment = '${{ needs.prepare-deployment.outputs.environment }}';
+            const deploymentState = '${{ needs.deploy.result == "success" ? "success" : "failure" }}';
+            
+            const deployments = await github.rest.repos.listDeployments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              environment: environment
+            });
+            
+            if (deployments.data.length > 0) {
+              const deploymentId = deployments.data[0].id;
+              await github.rest.repos.createDeploymentStatus({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                deployment_id: deploymentId,
+                state: deploymentState,
+                environment: environment,
+                description: `Deployment to ${environment} ${deploymentState == 'success' ? 'succeeded' : 'failed'}`
+              });
+            }
