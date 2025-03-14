@@ -1,0 +1,68 @@
+node_modules
+
+# PHP dependencies
+vendor
+
+# Git directory
+.git
+
+# Environment files (potentially containing sensitive information)
+.env*
+
+# Log files
+*.log
+
+# Documentation files
+*.md
+README.md
+
+# Test files and directories
+tests
+phpunit.xml
+coverage
+
+# Application storage (should be mounted as volumes)
+storage/app/*
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+
+# Docker-related files
+.dockerignore
+Dockerfile*
+docker-compose*
+
+# CI/CD and GitHub specific files
+.github
+
+# Infrastructure files (except those needed for the build)
+infrastructure
+
+# Keep necessary infrastructure files
+!infrastructure/docker/php/php.ini
+!infrastructure/docker/php/www.conf
+!infrastructure/docker/php/health-check.sh
+!infrastructure/docker/nginx.conf
+
+# Build artifacts
+build
+dist
+
+# Local development files
+.vscode
+.idea
+*.swp
+*.swo
+
+# Cache directories
+.npm
+.yarn
+.cache
+
+# Editor configuration
+.editorconfig
+.eslintrc*
+.prettierrc*
+.stylelintrc*
+tsconfig.json
