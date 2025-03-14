@@ -1,0 +1,147 @@
+# Development environment values for documents-view Helm chart
+# This file overrides the values.yaml with development-specific settings
+
+replicaCount: 1
+
+image:
+  registry: localhost:5000
+  repository:
+    frontend: insurepilot/documents-view-frontend
+    backend: insurepilot/documents-view-backend
+  tag: dev
+  pullPolicy: Always
+  pullSecrets: []
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: documents-view-dev
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9090"
+  prometheus.io/path: "/metrics"
+  environment: "development"
+
+service:
+  type: ClusterIP
+  frontend:
+    port: 80
+    targetPort: 80
+  backend:
+    port: 8000
+    targetPort: 8000
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  hosts:
+    - host: documents-dev.local
+      paths:
+        - path: /
+          pathType: Prefix
+          service: frontend
+        - path: /api
+          pathType: Prefix
+          service: backend
+  tls: []
+
+resources:
+  frontend:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "1"
+      memory: "2Gi"
+  backend:
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector:
+  environment: development
+
+tolerations: []
+affinity: {}
+
+persistence:
+  enabled: true
+  storageClass: "standard"
+  size: "10Gi"
+  accessModes:
+    - ReadWriteMany
+
+config:
+  adobe_sdk_url: "https://documentcloud.adobe.com/view-sdk/main.js"
+  document_viewer_enabled: "true"
+  document_viewer_max_file_size: "50"
+  document_viewer_allowed_types: "pdf,docx,xlsx,pptx"
+  document_viewer_cache_ttl: "3600"
+  document_viewer_audit_enabled: "true"
+  document_storage_path: "/var/www/storage/documents"
+  app_debug: "true"
+  log_level: "debug"
+
+externalDatabase:
+  enabled: false
+
+mariadb:
+  enabled: true
+  auth:
+    rootPassword: "dev-root-password"
+    database: "insurepilot_dev"
+    username: "insurepilot_dev"
+    password: "insurepilot_dev_password"
+  primary:
+    persistence:
+      enabled: true
+      size: "8Gi"
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "1"
+        memory: "2Gi"
+
+externalRedis:
+  enabled: false
+
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    password: "dev-redis-password"
+  master:
+    persistence:
+      enabled: true
+      size: "4Gi"
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "1Gi"
+      limits:
+        cpu: "1"
+        memory: "2Gi"
+
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: "30s"
+    scrapeTimeout: "10s"
+  prometheusRule:
+    enabled: false
