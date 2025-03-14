@@ -1,0 +1,188 @@
+name: Build Documents View
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - src/**
+      - infrastructure/docker/**
+      - .github/workflows/build.yml
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - src/**
+      - infrastructure/docker/**
+      - .github/workflows/build.yml
+  workflow_dispatch:
+
+jobs:
+  backend-tests:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.2
+          extensions: json, redis, pdo_mysql, zip, gd, mbstring, xml, pcntl
+          coverage: xdebug
+
+      - name: Cache Composer packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          
+      - name: Install PHP dependencies
+        run: cd src/backend && composer install --no-progress --prefer-dist
+
+      - name: Set up test environment
+        run: cd src/backend && cp .env.example .env.testing && php artisan key:generate --env=testing
+
+      - name: Run unit tests
+        run: cd src/backend && php artisan test --testsuite=Unit --coverage-clover=coverage.xml
+
+      - name: Run integration tests
+        run: cd src/backend && php artisan test --testsuite=Feature,Integration
+
+      - name: Check code coverage
+        run: cd src/backend && php -r "exit((float)shell_exec('grep -o \"<coverage line-rate=\\\"[0-9.]*\\\"\" coverage.xml | grep -o \"[0-9.]*\"') < 0.85 ? 1 : 0);"
+
+  frontend-tests:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Cache Node modules
+        uses: actions/cache@v3
+        with:
+          path: src/web/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install dependencies
+        run: cd src/web && npm ci
+
+      - name: Run unit tests
+        run: cd src/web && npm test -- --coverage
+
+      - name: Check code coverage
+        run: cd src/web && npx jest-coverage-thresholds --global=80
+
+      - name: Run type checking
+        run: cd src/web && npx tsc --noEmit
+
+  build-images:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests]
+    if: github.event_name != 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Set image tags
+        id: tags
+        run: |
+          echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
+            echo "VERSION=$(grep -m 1 'version' src/web/package.json | cut -d '"' -f 4)" >> $GITHUB_ENV
+          fi
+
+      - name: Login to GitLab Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.GITLAB_REGISTRY }}
+          username: ${{ secrets.GITLAB_USERNAME }}
+          password: ${{ secrets.GITLAB_TOKEN }}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: infrastructure/docker/backend.Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.GITLAB_REGISTRY }}/insurepilot/documents-view/backend:${{ env.BRANCH_NAME }}-${{ env.SHORT_SHA }}
+            ${{ env.VERSION != '' && format('{0}/insurepilot/documents-view/backend:{1}', secrets.GITLAB_REGISTRY, env.VERSION) || '' }}
+          cache-from: type=registry,ref=${{ secrets.GITLAB_REGISTRY }}/insurepilot/documents-view/backend:buildcache
+          cache-to: type=registry,ref=${{ secrets.GITLAB_REGISTRY }}/insurepilot/documents-view/backend:buildcache,mode=max
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: infrastructure/docker/frontend.Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.GITLAB_REGISTRY }}/insurepilot/documents-view/frontend:${{ env.BRANCH_NAME }}-${{ env.SHORT_SHA }}
+            ${{ env.VERSION != '' && format('{0}/insurepilot/documents-view/frontend:{1}', secrets.GITLAB_REGISTRY, env.VERSION) || '' }}
+          cache-from: type=registry,ref=${{ secrets.GITLAB_REGISTRY }}/insurepilot/documents-view/frontend:buildcache
+          cache-to: type=registry,ref=${{ secrets.GITLAB_REGISTRY }}/insurepilot/documents-view/frontend:buildcache,mode=max
+
+  trigger-deployment:
+    name: Trigger Deployment
+    runs-on: ubuntu-latest
+    needs: [build-images]
+    if: github.event_name != 'pull_request'
+    steps:
+      - name: Set deployment environment
+        id: env
+        run: |
+          if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
+            echo "DEPLOY_ENV=production" >> $GITHUB_ENV
+          elif [[ "$GITHUB_REF" == "refs/heads/develop" ]]; then
+            echo "DEPLOY_ENV=development" >> $GITHUB_ENV
+          fi
+          echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Trigger deployment workflow
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          event-type: deploy-documents-view
+          client-payload: '{"environment": "${{ env.DEPLOY_ENV }}", "branch": "${{ env.BRANCH_NAME }}", "sha": "${{ env.SHORT_SHA }}"}'
+
+      - name: Notify build success
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          payload: |
+            {"text":"✅ Documents View build successful.\nBranch: ${{ env.BRANCH_NAME }}\nCommit: ${{ env.SHORT_SHA }}\nDeployment to ${{ env.DEPLOY_ENV }} environment triggered."}
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+  notify-failure:
+    name: Notify Failure
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests, build-images, trigger-deployment]
+    if: failure()
+    steps:
+      - name: Set branch name
+        run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+        
+      - name: Notify build failure
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          payload: |
+            {"text":"❌ Documents View build failed.\nBranch: ${{ env.BRANCH_NAME }}\nSee details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
