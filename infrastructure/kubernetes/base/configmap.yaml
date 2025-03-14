@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: documents-view-config
+  labels:
+    app: documents-view
+    component: config
+    part-of: insure-pilot
+    managed-by: kustomize
+data:
+  DOCUMENT_VIEWER_ENABLED: 'true'
+  DOCUMENT_VIEWER_MAX_FILE_SIZE: '50'
+  DOCUMENT_VIEWER_ALLOWED_TYPES: 'pdf,docx,xlsx,pptx'
+  DOCUMENT_VIEWER_CACHE_TTL: '3600'
+  DOCUMENT_VIEWER_AUDIT_ENABLED: 'true'
+  ADOBE_SDK_URL: 'https://documentcloud.adobe.com/view-sdk/main.js'
+  DB_HOST: 'mariadb'
+  DB_PORT: '3306'
+  DB_DATABASE: 'insurepilot'
+  REDIS_HOST: 'redis'
+  REDIS_PORT: '6379'
+  DOCUMENT_STORAGE_PATH: '/var/www/storage/documents'
+  REGISTRY: 'registry.example.com'
+  TAG: 'latest'
