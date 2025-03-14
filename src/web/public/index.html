@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<!--
+  The main HTML entry point for the Documents View feature.
+  This file provides the initial DOM structure, loads necessary resources,
+  and configures the application for optimal performance, accessibility, and SEO.
+-->
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="theme-color" content="#0066CC" />
+    <meta name="description" content="Documents View for Insure Pilot - Review, process, and manage insurance-related documents" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://documentcloud.adobe.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.insurepilot.com;">
+    <!-- 
+      manifest.json provides metadata used when your web app is installed on a
+      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
+     -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <!--
+      Website favicon for browser tabs and bookmarks
+    -->
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <!--
+      Preconnect to Google Fonts for faster font loading
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <!--
+      Preconnect to Google Static Fonts for faster font loading
+    -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+      Inter Font from Google Fonts - Primary font for the application following design system requirements
+    -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <!--
+      Title of the document
+    -->
+    <title>Documents View | Insure Pilot</title>
+  </head>
+  <body>
+    <!--
+      Fallback content if JavaScript is disabled
+    -->
+    <noscript>You need to enable JavaScript to run this application.</noscript>
+    <!--
+      Root element where the React application will be mounted
+    -->
+    <div id="root" class="document-viewer-app" role="application" aria-label="Documents View"></div>
+    <!--
+      Adobe Acrobat PDF Viewer integration
+    -->
+    <script type="text/javascript">
+      // Global configuration object for the Documents View feature
+      window.DOCUMENTS_VIEW_CONFIG = {
+        adobeApiKey: process.env.REACT_APP_ADOBE_API_KEY,
+        enableAccessibility: true,
+        enableAnnotations: false,
+        enableFormFilling: false,
+        showDownloadPDF: false,
+        showPrintPDF: false
+      };
+
+      // Asynchronously load the Adobe Acrobat PDF Viewer script
+      function loadAdobeViewer() {
+        var script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = "https://documentcloud.adobe.com/view-sdk/main.js"; // Adobe Acrobat PDF Viewer - Latest
+        script.async = true;
+        document.head.appendChild(script);
+      }
+      loadAdobeViewer();
+    </script>
+    <!--
+      Main application bundle - Entry point for the React application
+    -->
+    <script src="compiled JavaScript bundle"></script>
+  </body>
+</html>
