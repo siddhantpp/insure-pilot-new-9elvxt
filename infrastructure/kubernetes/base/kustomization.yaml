@@ -1,0 +1,48 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: documents-view-base
+resources:
+- deployment.yaml
+- service.yaml
+- configmap.yaml
+- secret.yaml
+- hpa.yaml
+commonLabels:
+  app: documents-view
+  part-of: insure-pilot
+  managed-by: kustomize
+configMapGenerator:
+- name: documents-view-config
+  behavior: create
+  literals:
+  - DOCUMENT_VIEWER_ENABLED=true
+  - DOCUMENT_VIEWER_MAX_FILE_SIZE=50
+  - DOCUMENT_VIEWER_ALLOWED_TYPES=pdf,docx,xlsx,pptx
+  - DOCUMENT_VIEWER_CACHE_TTL=3600
+  - DOCUMENT_VIEWER_AUDIT_ENABLED=true
+  - ADOBE_SDK_URL=https://documentcloud.adobe.com/view-sdk/main.js
+  - DB_HOST=mariadb
+  - DB_PORT=3306
+  - DB_DATABASE=insurepilot
+  - REDIS_HOST=redis
+  - REDIS_PORT=6379
+  - DOCUMENT_STORAGE_PATH=/var/www/storage/documents
+  - REGISTRY=registry.example.com
+  - TAG=latest
+secretGenerator:
+- name: documents-view-secrets
+  behavior: create
+  type: Opaque
+  literals:
+  - app_key=
+  - db_username=
+  - db_password=
+  - redis_password=
+  - adobe_sdk_key=
+generatorOptions:
+  disableNameSuffixHash: false
+  labels:
+    generated-by: kustomize
+  annotations:
+    kustomize.generated.resources: documents-view
