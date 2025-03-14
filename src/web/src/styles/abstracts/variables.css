@@ -1,0 +1,135 @@
+:root {
+  /* Base CSS variables that apply to the entire application */
+
+  /* Color Palette */
+  /* Primary color scheme for the application */
+  --color-primary: #0066CC;
+  --color-primary-dark: #0055AA;
+  --color-primary-light: #E6F0FA;
+  --color-secondary: #F5F5F5;
+  --color-accent: #FF9900;
+  --color-accent-dark: #E68A00;
+  --color-text-primary: #333333;
+  --color-text-secondary: #666666;
+  --color-text-tertiary: #999999;
+  --color-border: #E5E5E5;
+  --color-background: #FFFFFF;
+  --color-background-secondary: #F9F9F9;
+  --color-success: #28A745;
+  --color-success-light: rgba(40, 167, 69, 0.1);
+  --color-error: #DC3545;
+  --color-error-light: rgba(220, 53, 69, 0.1);
+  --color-warning: #FFC107;
+  --color-warning-light: rgba(255, 193, 7, 0.1);
+  --color-info: #17A2B8;
+  --color-info-light: rgba(23, 162, 184, 0.1);
+  --color-overlay: rgba(0, 0, 0, 0.75);
+
+  /* Typography */
+  /* Font families, sizes, weights, and line heights */
+  --font-family-base: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-xxl: 24px;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --line-height-sm: 1.2;
+  --line-height-base: 1.5;
+  --line-height-lg: 1.8;
+
+  /* Spacing */
+  /* Consistent spacing values for margins, padding, and gaps */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+
+  /* Borders */
+  /* Border styles, widths, and radii */
+  --border-width: 1px;
+  --border-style: solid;
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-radius-pill: 9999px;
+
+  /* Shadows */
+  /* Box shadow definitions for elevation */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-focus: 0 0 0 2px rgba(0, 102, 204, 0.2);
+  --shadow-error: 0 0 0 2px rgba(220, 53, 69, 0.2);
+
+  /* Transitions */
+  /* Animation timing and easing */
+  --transition-base: 0.2s ease-in-out;
+  --transition-fast: 0.1s ease-in-out;
+  --transition-slow: 0.3s ease-in-out;
+
+  /* Z-index */
+  /* Z-index values for layering elements */
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1020;
+  --z-index-fixed: 1030;
+  --z-index-modal-backdrop: 1040;
+  --z-index-modal: 1050;
+  --z-index-popover: 1060;
+  --z-index-tooltip: 1070;
+  --lightbox-z-index: 1080;
+
+  /* Layout */
+  /* Layout-specific variables */
+  --header-height: 64px;
+  --footer-height: 48px;
+  --sidebar-width: 250px;
+  --right-panel-width: 400px;
+  --max-content-width: 1600px;
+  --max-content-height: 900px;
+
+  /* Breakpoints */
+  /* Screen size breakpoints for responsive design */
+  --breakpoint-mobile: 768px;
+  --breakpoint-tablet: 1199px;
+  --breakpoint-desktop: 1200px;
+
+  /* Form Elements */
+  /* Variables for form controls */
+  --input-height: 40px;
+  --input-padding: 0 12px;
+  --input-border-radius: var(--border-radius-sm);
+  --input-border-color: var(--color-border);
+  --input-focus-border-color: var(--color-primary);
+  --input-error-border-color: var(--color-error);
+  --input-disabled-bg: var(--color-background-secondary);
+  --input-placeholder-color: var(--color-text-tertiary);
+
+  /* Buttons */
+  /* Variables for button styling */
+  --button-padding-sm: 6px 12px;
+  --button-padding-md: 8px 16px;
+  --button-padding-lg: 10px 20px;
+  --button-border-radius: var(--border-radius-sm);
+  --button-primary-bg: var(--color-primary);
+  --button-primary-text: white;
+  --button-primary-hover-bg: var(--color-primary-dark);
+  --button-secondary-bg: var(--color-secondary);
+  --button-secondary-text: var(--color-text-primary);
+  --button-secondary-hover-bg: #E5E5E5;
+
+  /* Document Viewer Specific */
+  /* Variables specific to the Documents View feature */
+  --pdf-background: #F5F5F5;
+  --pdf-controls-height: 40px;
+  --metadata-background: var(--color-background);
+  --metadata-field-spacing: var(--spacing-md);
+  --history-item-padding: var(--spacing-md);
+  --history-item-border: 1px solid var(--color-border);
+}
