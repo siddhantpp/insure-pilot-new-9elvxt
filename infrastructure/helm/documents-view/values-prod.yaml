@@ -1,0 +1,313 @@
+# Production environment values for documents-view Helm chart
+# This file overrides the values.yaml with production-specific settings
+
+replicaCount: 3
+
+image:
+  registry: registry.example.com
+  repository:
+    frontend: insurepilot/documents-view-frontend
+    backend: insurepilot/documents-view-backend
+  tag: 1.0.0
+  pullPolicy: IfNotPresent
+  pullSecrets:
+    - name: registry-credentials
+
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/documents-view-prod-role
+  name: documents-view-prod
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9090"
+  prometheus.io/path: "/metrics"
+  environment: production
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+
+service:
+  type: ClusterIP
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: arn:aws:acm:us-east-1:123456789012:certificate/abcdef12-3456-7890-abcd-ef1234567890
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: https
+  frontend:
+    port: 80
+    targetPort: 80
+  backend:
+    port: 8000
+    targetPort: 8000
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+  hosts:
+    - host: documents.insurepilot.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: frontend
+        - path: /api
+          pathType: Prefix
+          service: backend
+  tls:
+    - secretName: documents-view-prod-tls
+      hosts:
+        - documents.insurepilot.com
+
+resources:
+  frontend:
+    requests:
+      cpu: "2"
+      memory: "4Gi"
+    limits:
+      cpu: "4"
+      memory: "8Gi"
+  backend:
+    requests:
+      cpu: "4"
+      memory: "8Gi"
+    limits:
+      cpu: "8"
+      memory: "16Gi"
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 180
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+      - type: Pods
+        value: 1
+        periodSeconds: 60
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 25
+        periodSeconds: 60
+      - type: Pods
+        value: 1
+        periodSeconds: 60
+      selectPolicy: Min
+
+nodeSelector:
+  environment: production
+  node-type: application
+
+tolerations:
+  - key: node-role.kubernetes.io/application
+    operator: Exists
+    effect: NoSchedule
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app
+            operator: In
+            values:
+            - documents-view
+        topologyKey: kubernetes.io/hostname
+    requiredDuringSchedulingIgnoredDuringExecution:
+    - labelSelector:
+        matchExpressions:
+        - key: app
+          operator: In
+          values:
+          - documents-view
+      topologyKey: topology.kubernetes.io/zone
+
+persistence:
+  enabled: true
+  storageClass: "gp3"
+  size: "500Gi"
+  accessModes:
+    - ReadWriteMany
+
+config:
+  adobe_sdk_url: "https://documentcloud.adobe.com/view-sdk/main.js"
+  document_viewer_enabled: "true"
+  document_viewer_max_file_size: "50"
+  document_viewer_allowed_types: "pdf,docx,xlsx,pptx"
+  document_viewer_cache_ttl: "3600"
+  document_viewer_audit_enabled: "true"
+  document_storage_path: "/var/www/storage/documents"
+  app_debug: "false"
+  log_level: "warning"
+
+appSecrets:
+  existingSecret: "documents-view-prod-secrets"
+
+externalDatabase:
+  enabled: false
+
+mariadb:
+  enabled: true
+  architecture: replication
+  auth:
+    existingSecret: "documents-view-mariadb-credentials"
+    database: "insurepilot_prod"
+  primary:
+    persistence:
+      enabled: true
+      storageClass: "gp3"
+      size: "100Gi"
+    resources:
+      requests:
+        cpu: "4"
+        memory: "8Gi"
+      limits:
+        cpu: "8"
+        memory: "16Gi"
+  secondary:
+    replicaCount: 2
+    persistence:
+      enabled: true
+      storageClass: "gp3"
+      size: "100Gi"
+    resources:
+      requests:
+        cpu: "2"
+        memory: "4Gi"
+      limits:
+        cpu: "4"
+        memory: "8Gi"
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+externalRedis:
+  enabled: false
+
+redis:
+  enabled: true
+  architecture: replication
+  auth:
+    enabled: true
+    existingSecret: "documents-view-redis-credentials"
+  master:
+    persistence:
+      enabled: true
+      storageClass: "gp3"
+      size: "20Gi"
+    resources:
+      requests:
+        cpu: "2"
+        memory: "4Gi"
+      limits:
+        cpu: "4"
+        memory: "8Gi"
+  replica:
+    replicaCount: 2
+    persistence:
+      enabled: true
+      storageClass: "gp3"
+      size: "20Gi"
+    resources:
+      requests:
+        cpu: "1"
+        memory: "2Gi"
+      limits:
+        cpu: "2"
+        memory: "4Gi"
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: "30s"
+    scrapeTimeout: "10s"
+  prometheusRule:
+    enabled: true
+    rules:
+      - alert: DocumentsViewHighErrorRate
+        expr: sum(rate(http_requests_total{app="documents-view",status=~"5.."}[5m])) / sum(rate(http_requests_total{app="documents-view"}[5m])) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+          environment: production
+        annotations:
+          summary: "Documents View high error rate in production"
+          description: "Error rate is above 1% for the last 5 minutes in production environment"
+      - alert: DocumentsViewHighLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{app="documents-view"}[5m])) by (le)) > 2
+        for: 5m
+        labels:
+          severity: warning
+          environment: production
+        annotations:
+          summary: "Documents View high latency in production"
+          description: "95th percentile of request duration is above 2 seconds for the last 5 minutes in production environment"
+      - alert: DocumentsViewHighMemoryUsage
+        expr: container_memory_usage_bytes{pod=~"documents-view.*"} / container_spec_memory_limit_bytes{pod=~"documents-view.*"} > 0.85
+        for: 15m
+        labels:
+          severity: warning
+          environment: production
+        annotations:
+          summary: "Documents View high memory usage"
+          description: "Memory usage is above 85% for the last 15 minutes"
+
+backup:
+  enabled: true
+  schedule: "0 1 * * *"
+  retention:
+    daily: 7
+    weekly: 4
+    monthly: 12
+  destination:
+    s3:
+      bucket: "insurepilot-documents-backups"
+      region: "us-east-1"
+      path: "production/documents-view"
+
+highAvailability:
+  enabled: true
+  multiZone: true
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 2
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app: documents-view
