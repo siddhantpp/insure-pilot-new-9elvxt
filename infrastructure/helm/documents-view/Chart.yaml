@@ -1,0 +1,30 @@
+apiVersion: v2
+name: documents-view
+description: A Helm chart for deploying the Documents View feature of Insure Pilot
+version: 1.0.0
+appVersion: 1.0.0
+type: application
+keywords:
+  - documents
+  - insurance
+  - viewer
+  - pdf
+home: https://github.com/insurepilot/documents-view
+sources:
+  - https://github.com/insurepilot/documents-view
+maintainers:
+  - name: Insure Pilot DevOps Team
+    email: devops@insurepilot.com
+dependencies:
+  - name: mariadb
+    version: 11.4.6
+    repository: https://charts.bitnami.com/bitnami
+    condition: mariadb.enabled
+    tags:
+      - database
+  - name: redis
+    version: 17.11.6
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled
+    tags:
+      - cache
