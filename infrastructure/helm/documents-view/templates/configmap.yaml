@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "documents-view.fullname" . }}-config
+  labels:
+    {{- include "documents-view.labels" . | nindent 4 }}
+data:
+  DOCUMENT_VIEWER_ENABLED: "{{ .Values.config.document_viewer_enabled }}"
+  DOCUMENT_VIEWER_MAX_FILE_SIZE: "{{ .Values.config.document_viewer_max_file_size }}"
+  DOCUMENT_VIEWER_ALLOWED_TYPES: "{{ .Values.config.document_viewer_allowed_types }}"
+  DOCUMENT_VIEWER_CACHE_TTL: "{{ .Values.config.document_viewer_cache_ttl }}"
+  DOCUMENT_VIEWER_AUDIT_ENABLED: "{{ .Values.config.document_viewer_audit_enabled }}"
+  ADOBE_SDK_URL: "{{ .Values.config.adobe_sdk_url }}"
+  DOCUMENT_STORAGE_PATH: "{{ .Values.config.document_storage_path }}"
+  APP_DEBUG: "{{ .Values.config.app_debug }}"
+  LOG_LEVEL: "{{ .Values.config.log_level }}"
+  
+  {{- if .Values.externalDatabase.enabled }}
+  # Use external database config
+  DB_HOST: "{{ .Values.externalDatabase.host }}"
+  DB_PORT: "{{ .Values.externalDatabase.port }}"
+  DB_DATABASE: "{{ .Values.externalDatabase.database }}"
+  {{- else }}
+  # Use internal MariaDB
+  DB_HOST: "{{ .Release.Name }}-mariadb"
+  DB_PORT: "3306"
+  DB_DATABASE: "{{ .Values.mariadb.auth.database }}"
+  {{- end }}
+  
+  {{- if .Values.externalRedis.enabled }}
+  # Use external Redis config
+  REDIS_HOST: "{{ .Values.externalRedis.host }}"
+  REDIS_PORT: "{{ .Values.externalRedis.port }}"
+  {{- else }}
+  # Use internal Redis
+  REDIS_HOST: "{{ .Release.Name }}-redis-master"
+  REDIS_PORT: "6379"
+  {{- end }}
