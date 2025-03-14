@@ -1,0 +1,228 @@
+# Default values for documents-view Helm chart
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 2
+
+image:
+  registry: docker.io
+  repository:
+    frontend: insurepilot/documents-view-frontend
+    backend: insurepilot/documents-view-backend
+  tag: latest
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9090"
+  prometheus.io/path: "/metrics"
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+
+service:
+  type: ClusterIP
+  annotations: {}
+  frontend:
+    port: 80
+    targetPort: 80
+  backend:
+    port: 8000
+    targetPort: 8000
+
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  hosts:
+    - host: documents.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          service: frontend
+        - path: /api
+          pathType: Prefix
+          service: backend
+  tls: []
+
+resources:
+  frontend:
+    requests:
+      cpu: "1"
+      memory: "2Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+  backend:
+    requests:
+      cpu: "2"
+      memory: "4Gi"
+    limits:
+      cpu: "4"
+      memory: "8Gi"
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 180
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+      - type: Pods
+        value: 1
+        periodSeconds: 60
+      selectPolicy: Max
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 25
+        periodSeconds: 60
+      - type: Pods
+        value: 1
+        periodSeconds: 60
+      selectPolicy: Min
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      podAffinityTerm:
+        labelSelector:
+          matchExpressions:
+          - key: app
+            operator: In
+            values:
+            - documents-view
+        topologyKey: kubernetes.io/hostname
+
+persistence:
+  enabled: true
+  storageClass: "standard"
+  size: "100Gi"
+  accessModes:
+    - ReadWriteMany
+
+config:
+  adobe_sdk_url: "https://documentcloud.adobe.com/view-sdk/main.js"
+  document_viewer_enabled: "true"
+  document_viewer_max_file_size: "50"
+  document_viewer_allowed_types: "pdf,docx,xlsx,pptx"
+  document_viewer_cache_ttl: "3600"
+  document_viewer_audit_enabled: "true"
+  document_storage_path: "/var/www/storage/documents"
+  app_debug: "false"
+  log_level: "info"
+
+appSecrets:
+  appKey: ""
+  sendgridApiKey: ""
+  adobePdfApiKey: ""
+  adobePdfClientId: ""
+  lgtmApiKey: ""
+  encryptionKey: ""
+
+externalDatabase:
+  enabled: false
+  host: ""
+  port: 3306
+  user: ""
+  password: ""
+  database: ""
+  existingSecret: ""
+
+mariadb:
+  enabled: true
+  auth:
+    rootPassword: ""
+    database: "insurepilot"
+    username: "insurepilot"
+    password: ""
+  primary:
+    persistence:
+      enabled: true
+      size: "20Gi"
+    resources:
+      requests:
+        cpu: "1"
+        memory: "2Gi"
+      limits:
+        cpu: "2"
+        memory: "4Gi"
+
+externalRedis:
+  enabled: false
+  host: ""
+  port: 6379
+  password: ""
+  existingSecret: ""
+
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    password: ""
+  master:
+    persistence:
+      enabled: true
+      size: "8Gi"
+    resources:
+      requests:
+        cpu: "1"
+        memory: "2Gi"
+      limits:
+        cpu: "2"
+        memory: "4Gi"
+
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: "30s"
+    scrapeTimeout: "10s"
+  prometheusRule:
+    enabled: true
+    rules:
+      - alert: DocumentsViewHighErrorRate
+        expr: sum(rate(http_requests_total{app="documents-view",status=~"5.."}[5m])) / sum(rate(http_requests_total{app="documents-view"}[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Documents View high error rate"
+          description: "Error rate is above 5% for the last 5 minutes"
+      - alert: DocumentsViewHighLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{app="documents-view"}[5m])) by (le)) > 3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Documents View high latency"
+          description: "95th percentile of request duration is above 3 seconds for the last 5 minutes"
