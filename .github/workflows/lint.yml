@@ -1,0 +1,97 @@
+name: Lint Code
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - src/**
+      - .github/workflows/lint.yml
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - src/**
+  workflow_dispatch:
+
+jobs:
+  php-lint:
+    name: PHP Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.2
+          extensions: json, redis
+          tools: composer:v2, phpcs, php-cs-fixer
+
+      - name: Cache Composer packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.composer/cache
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+
+      - name: Install PHP dependencies
+        run: cd src/backend && composer install --no-progress --prefer-dist
+
+      - name: Run Laravel Pint
+        run: cd src/backend && composer lint
+
+      - name: Run PHP_CodeSniffer
+        run: cd src/backend && vendor/bin/phpcs --standard=PSR12 app
+
+      - name: Run PHPStan
+        run: cd src/backend && vendor/bin/phpstan analyse app --level=5
+
+  js-lint:
+    name: JavaScript/TypeScript Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Cache Node modules
+        uses: actions/cache@v3
+        with:
+          path: src/web/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install dependencies
+        run: cd src/web && npm ci
+
+      - name: Run ESLint
+        run: cd src/web && npm run lint
+
+      - name: Run Prettier check
+        run: cd src/web && npm run format:check
+
+      - name: Run TypeScript check
+        run: cd src/web && npm run type-check
+
+  notify-failure:
+    name: Notify Team on Failure
+    runs-on: ubuntu-latest
+    needs: [php-lint, js-lint]
+    if: failure()
+    steps:
+      - name: Set branch name
+        run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+
+      - name: Notify lint failure
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          payload: '{"text":"❌ Documents View lint checks failed.\nBranch: ${{ env.BRANCH_NAME }}\nSee details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}'
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
