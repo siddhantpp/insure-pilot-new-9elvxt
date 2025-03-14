@@ -1,0 +1,15 @@
+User-agent: *
+Disallow: /api/
+Disallow: /documents/
+Disallow: /login
+Disallow: /admin/
+
+# Allow public pages
+Allow: /
+Allow: /about
+Allow: /contact
+Allow: /terms
+Allow: /privacy
+
+# Sitemap location
+Sitemap: https://insurepilot.com/sitemap.xml
