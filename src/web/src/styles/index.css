@@ -1,0 +1,154 @@
+/* 
+ * Main CSS entry point for the Documents View feature
+ * This file imports all other style modules and defines global styles
+ * Version: 1.0.0
+ */
+
+/* Import abstracts - variables and mixins */
+@import './abstracts/variables.css';
+@import './abstracts/mixins.css';
+
+/* Import base styles */
+@import './base/reset.css';
+@import './base/typography.css';
+@import './base/accessibility.css';
+
+/* Import component styles */
+@import './components/lightbox.css';
+@import './components/pdf.css';
+@import './components/metadata.css';
+@import './components/history.css';
+@import './components/dropdown.css';
+
+/* Import layout styles */
+@import './layout/panels.css';
+
+/* Import theme styles */
+@import './themes/light.css';
+@import './themes/dark.css';
+
+/* Global styles */
+:root {
+  /* Apply default theme (light) when no theme is explicitly set */
+}
+
+body {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  color: var(--color-text-primary);
+  background-color: var(--color-background);
+}
+
+/* Global utility classes */
+/* Utility classes available throughout the application */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--max-content-width);
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.mt-0 {
+  margin-top: 0;
+}
+
+.mb-0 {
+  margin-bottom: 0;
+}
+
+.ml-0 {
+  margin-left: 0;
+}
+
+.mr-0 {
+  margin-right: 0;
+}
+
+.m-0 {
+  margin: 0;
+}
+
+.p-0 {
+  padding: 0;
+}
+
+/* Document viewer specific global styles */
+/* Global styles specific to the Documents View feature */
+.document-viewer-app {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* Theme detection */
+/* Support for system preference based theme switching */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) {
+    color-scheme: dark;
+  }
+}
+
+/* Print styles */
+/* Styles applied when printing */
+@media print {
+  .lightbox-overlay {
+    position: relative;
+    background: none;
+  }
+  
+  .lightbox-close-button,
+  .metadata-actions,
+  .pdf-controls-container {
+    display: none !important;
+  }
+}
